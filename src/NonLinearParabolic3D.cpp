@@ -139,18 +139,8 @@ NonLinearParabolic3D::assemble_system()
       for (unsigned int q = 0; q < n_q; ++q)
         {
           // Evaluate coefficients on this quadrature node.
-          
-          
-          Tensor<1, dim> b_loc;
-          for (unsigned short i = 0; i < dim; i++)
-          {
-            b_loc[i] = transport_coeff.value(fe_values.quadrature_point(q), i);
-          }
-          
-          const double mu_0_loc = mu_0.value(fe_values.quadrature_point(q));
-          const double mu_1_loc = mu_1.value(fe_values.quadrature_point(q));
-          const double sigma_loc = reaction_coeff.value(fe_values.quadrature_point(q));
-          const double f_loc = forcing_term.value(fe_values.quadrature_point(q));
+          const double d_loc = d.value(fe_values.quadrature_point(q));
+          const double alpha_loc = alpha.value(fe_values.quadrature_point(q));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -162,22 +152,8 @@ NonLinearParabolic3D::assemble_system()
                                        / deltat
                                        * fe_values.JxW(q);
                   
-                  // Non-linear stiffness matrix, first term.
-                  cell_matrix(i, j) += (2.0 * mu_1_loc * fe_values.shape_value(j, q) * solution_loc[q])
-                                       * scalar_product(solution_gradient_loc[q], fe_values.shape_grad(i, q))
-                                       * fe_values.JxW(q);
+                  //TODO: terms
 
-                  // Non-linear stiffness matrix, second term.
-                  cell_matrix(i, j) += (mu_0_loc + mu_1_loc * solution_loc[q] * solution_loc[q])
-                                       * scalar_product(fe_values.shape_grad(j, q), fe_values.shape_grad(i, q))
-                                       * fe_values.JxW(q);
-                  
-                  
-                  // Linear terms
-                  cell_matrix(i, j) += scalar_product(b_loc, fe_values.shape_grad(j,q))
-                                       * fe_values.shape_value(i,q)
-                                       * fe_values.JxW(q);
-                  
                   cell_matrix(i, j) += sigma_loc * fe_values.shape_value(j,q)
                                        * fe_values.shape_value(i,q)
                                        * fe_values.JxW(q);
@@ -185,97 +161,21 @@ NonLinearParabolic3D::assemble_system()
                 }
 
               // Assemble the residual vector (with changed sign).
-              
+
               // Time derivative term.
               cell_residual(i) -= (solution_loc[q] - solution_old_loc[q])
                                   / deltat
                                   * fe_values.shape_value(i, q)
                                   * fe_values.JxW(q);
 
-              // Diffusion term.
-              cell_residual(i) -= (mu_0_loc + mu_1_loc * solution_loc[q] * solution_loc[q])
-                                  * scalar_product(solution_gradient_loc[q], fe_values.shape_grad(i, q))
-                                  * fe_values.JxW(q);
-              
-              
-              cell_residual(i) -= scalar_product(b_loc, solution_gradient_loc[q])
-                                  * fe_values.shape_value(i,q)
-                                  * fe_values.JxW(q);
-              
+              //TODO: rhs terms
+
               cell_residual(i) -= sigma_loc * solution_loc[q]
                                   * fe_values.shape_value(i,q)
                                   * fe_values.JxW(q);
               
-              // Forcing term.
-              cell_residual(i) += f_loc
-                                  * fe_values.shape_value(i, q)
-                                  * fe_values.JxW(q);
-              
             }
         }
-      
-      
-      // Neumann boundary condition
-      if (cell->at_boundary())
-      {
-        
-        for (unsigned int face_number = 0; face_number < cell->n_faces(); ++face_number)
-        {
-          
-          if (cell->face(face_number)->at_boundary() && (
-                  cell->face(face_number)->boundary_id() == 0 ||
-                  /*cell->face(face_number)->boundary_id() == 1 ||*/
-                  cell->face(face_number)->boundary_id() == 2 ||
-                  /*cell->face(face_number)->boundary_id() == 3 ||*/
-                  cell->face(face_number)->boundary_id() == 4
-                  /*cell->face(face_number)->boundary_id() == 5*/
-          )
-                  )
-          {
-            fe_values_boundary.reinit(cell, face_number);
-            
-            exact_solution.set_time(time);
-            
-            for (unsigned int q = 0; q < quadrature_boundary->size(); ++q){
-              
-              
-              //------------this section is only for proving correctedness
-              Vector<double> b_bound(dim);
-              Tensor<1,dim> b;
-              transport_coeff.vector_value(fe_values_boundary.quadrature_point(q), b_bound);
-              
-              
-              for (unsigned int d = 0; d < dim; d++){
-                b[d] = b_bound[d];
-              }
-              
-              
-              const double u2 = exact_solution.value(fe_values_boundary.quadrature_point(q))
-                                * exact_solution.value(fe_values_boundary.quadrature_point(q));
-              
-              
-              const double neumann_value = (mu0 + mu1 * u2)
-                                           * scalar_product(exact_solution.gradient(fe_values_boundary.quadrature_point(q)), fe_values_boundary.normal_vector(q));
-
-              //------------------------------------------------------------------------------------------
-              
-              //neumann_function.set_time(time)
-              
-              
-              for (unsigned int i = 0; i < dofs_per_cell; ++i) {
-                cell_residual(i) += neumann_value
-                               * fe_values_boundary.shape_value(i, q)
-                               * fe_values_boundary.JxW(q);
-                
-              }
-            }
-          }
-        }
-      }
-      
-      
-      
-      
 
       cell->get_dof_indices(dof_indices);
 
@@ -285,28 +185,6 @@ NonLinearParabolic3D::assemble_system()
 
   jacobian_matrix.compress(VectorOperation::add);
   residual_vector.compress(VectorOperation::add);
-
-  // We apply Dirichlet boundary conditions.
-  // The linear system solution is delta, which is the difference between
-  // u_{n+1}^{(k+1)} and u_{n+1}^{(k)}. Both must satisfy the same Dirichlet
-  // boundary conditions: therefore, on the boundary, delta = u_{n+1}^{(k+1)} -
-  // u_{n+1}^{(k+1)} = 0. We impose homogeneous Dirichlet BCs.
-  {
-    std::map<types::global_dof_index, double> boundary_values;
-
-    std::map<types::boundary_id, const Function<dim> *> boundary_functions;
-    Functions::ZeroFunction<dim>                        zero_function;
-
-    for (unsigned int i = 0; i < 6; ++i)
-      boundary_functions[i] = &zero_function;
-
-    VectorTools::interpolate_boundary_values(dof_handler,
-                                             boundary_functions,
-                                             boundary_values);
-
-    MatrixTools::apply_boundary_values(
-      boundary_values, jacobian_matrix, delta_owned, residual_vector, false);
-  }
 }
 
 void

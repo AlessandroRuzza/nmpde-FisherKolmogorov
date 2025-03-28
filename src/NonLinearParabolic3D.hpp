@@ -38,128 +38,34 @@ public:
   // Physical dimension (1D, 2D, 3D)
   static constexpr unsigned int dim = 3;
 
-  static constexpr double mu0 = 0.1;
-  static constexpr double mu1 = 1.0;
-  static constexpr double sigma = 2.0;
-  static constexpr double b1 = 0.5;
-  static constexpr double b2 = 0.5;
-  static constexpr double b3 = 0.5;
-  static constexpr double dirichlet = 0.0;
-  static constexpr double initial = 0.0;
-
   // Function for the mu_0 coefficient.
-  class FunctionMu0 : public Function<dim>
+  class FunctionD : public Function<dim>
   {
   public:
     virtual double
-    value(const Point<dim> & /*p*/,
+    value(const Point<dim> & p,
           const unsigned int /*component*/ = 0) const override
     {
-      return mu0;
+      double x = p[0], y = p[1], z = p[2];
+      return 1; //TODO: insert real data for D matrix
     }
   };
 
-  // Function for the mu_1 coefficient.
-  class FunctionMu1 : public Function<dim>
-  {
-  public:
-    virtual double
-    value(const Point<dim> & /*p*/,
-          const unsigned int /*component*/ = 0) const override
-    {
-      return mu1;
-    }
-  };
-  
-  
-  // Function for the transport coefficient.
-  class FunctionTransport : public Function<dim>
-  {
-  public:
-    virtual double
-    value(const Point<dim> & /*p*/,
-          const unsigned int component = 0) const override
-    {
-      if(component == 0) return b1;
-      if(component == 1) return b2;
-      else return b3;
-    }
-    
-    virtual void
-    vector_value(const Point<dim> & p,
-                 Vector<double> &values) const override{
-      for (unsigned short i = 0; i < dim; i++)
-      {
-        values[i] = value(p, i);
-      }
-    }
-  };
-  
   // Function for the reaction coefficient.
   class FunctionReaction : public Function<dim>
   {
   public:
     virtual double
-    value(const Point<dim> & /*p*/,
-          const unsigned int /*component*/ = 0) const override
-    {
-      return sigma;
-    }
-  };
-
-
-// Function for the forcing term.
-  class ForcingTerm : public Function<dim>
-  {
-  public:
-    virtual double
     value(const Point<dim> &p,
           const unsigned int /*component*/ = 0) const override
     {
-      
-      double t = get_time();
       double x = p[0], y = p[1], z = p[2];
-      
-      double exp_term = exp(-t);
-      double sin_x = sin(M_PI * x), cos_x = cos(M_PI * x);
-      double sin_y = sin(M_PI * y), cos_y = cos(M_PI * y);
-      double sin_z = sin(M_PI * z), cos_z = cos(M_PI * z);
-      
-      double u = exp(-t) * sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z);
-      
-      double du_dt = -exp(-t) * sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z);
-      double du_dx = M_PI * exp_term * cos_x * sin_y * sin_z;
-      double du_dy = M_PI * exp_term * sin_x * cos_y * sin_z;
-      double du_dz = M_PI * exp_term * sin_x * sin_y * cos_z;
-      
-      double laplacian_u = -3 * M_PI * M_PI * exp(-t) * sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z);
-      
-      double squared_gradient = M_PI * M_PI * exp(-2 * t) *
-                                (pow(cos(M_PI * x), 2) * pow(sin(M_PI * y), 2) * pow(sin(M_PI * z), 2) +
-                                 pow(sin(M_PI * x), 2) * pow(cos(M_PI * y), 2) * pow(sin(M_PI * z), 2) +
-                                 pow(sin(M_PI * x), 2) * pow(sin(M_PI * y), 2) * pow(cos(M_PI * z), 2));
-      
-      double advection = b1* du_dx + b2* du_dy + b3* du_dz;
-      
-      return du_dt - (mu0 + mu1 * u * u) * laplacian_u - 2 * mu1 * u * squared_gradient + advection + sigma*u;
-      
-    }
-  };
-
-  // Function for Dirichlet boundary conditions.
-  class DirichletFunction : public Function<dim>
-  {
-  public:
-    virtual double
-    value(const Point<dim> & /*p*/,
-          const unsigned int /*component*/ = 0) const override
-    {
-      return dirichlet;
+      return 1;      //TODO: insert real data for alpha
     }
   };
 
   // Function for initial conditions.
-  class FunctionU0 : public Function<dim>
+  class FunctionC0 : public Function<dim>
   {
   public:
     virtual double
@@ -168,55 +74,9 @@ public:
     {
       double x = p[0], y = p[1], z = p[2];
       
-      //return x * (1 - x) * y * (1 - y) * z * (1 - z);
-      return sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z);
+      return 0; //TODO: insert real data for c0
     }
   };
-  
-  
-  
-  // Exact solution.
-  class ExactSolution : public Function<dim>
-  {
-  public:
-    ExactSolution(){}
-    
-    // Evaluation.
-    virtual double
-    value(const Point<dim> &p,
-          const unsigned int /*component*/ = 0) const override
-    {
-      double t = get_time();
-      double x = p[0], y = p[1], z = p[2];
-      
-      return exp(-t) * sin(M_PI * x) * sin(M_PI * y) * sin(M_PI * z);
-      
-    }
-    
-    // Gradient evaluation.
-    virtual Tensor<1, dim>
-    gradient(const Point<dim> &p,
-             const unsigned int /*component*/ = 0) const override
-    {
-      Tensor<1, dim> result;
-      double t = get_time();
-      double x = p[0], y = p[1], z = p[2];
-      
-      
-      double exp_term = exp(-t);
-      double sin_x = sin(M_PI * x), cos_x = cos(M_PI * x);
-      double sin_y = sin(M_PI * y), cos_y = cos(M_PI * y);
-      double sin_z = sin(M_PI * z), cos_z = cos(M_PI * z);
-      
-      result[0] = M_PI * exp_term * cos_x * sin_y * sin_z;
-      result[1] = M_PI * exp_term * sin_x * cos_y * sin_z;
-      result[2] = M_PI * exp_term * sin_x * sin_y * cos_z;
-      
-      
-      return result;
-    }
-  };
-  
   
   // Constructor. We provide the final time, time step Delta t and theta method
   // parameter as constructor arguments.
@@ -241,9 +101,6 @@ public:
   // Solve the problem.
   void
   solve();
-  
-  double
-  compute_error(const VectorTools::NormType &norm_type);
 
 protected:
   // Assemble the tangent problem.
@@ -276,27 +133,13 @@ protected:
   // Problem definition. ///////////////////////////////////////////////////////
 
   // mu_0 coefficient.
-  FunctionMu0 mu_0;
-
-  // mu_1 coefficient.
-  FunctionMu1 mu_1;
+  FunctionD d;
   
-  FunctionTransport transport_coeff;
-  
-  FunctionReaction reaction_coeff;
-  
-  
-  // Forcing term.
-  ForcingTerm forcing_term;
-
-  // Dirichlet boundary conditions.
-  DirichletFunction dirichlet_func;
+  FunctionReaction alpha;
 
   // Initial conditions.
-  FunctionU0 u_0;
+  FunctionC0 c_0;
   
-  ExactSolution exact_solution;
-
   // Current time.
   double time;
 

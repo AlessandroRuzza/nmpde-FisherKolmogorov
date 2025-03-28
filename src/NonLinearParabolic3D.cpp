@@ -146,18 +146,23 @@ NonLinearParabolic3D::assemble_system()
             {
               for (unsigned int j = 0; j < dofs_per_cell; ++j)
                 {
-                  // Mass matrix.
+                  // Time-derivative term.
                   cell_matrix(i, j) += fe_values.shape_value(i, q)
                                        * fe_values.shape_value(j, q)
                                        / deltat
                                        * fe_values.JxW(q);
-                  
-                  //TODO: terms
 
-                  cell_matrix(i, j) += sigma_loc * fe_values.shape_value(j,q)
+                  cell_matrix(i, j) += d_loc * fe_values.shape_grad(j, q)
+                                       * fe_values.shape_grad(i, q)
+                                       * fe_values.JxW(q);
+
+                  cell_matrix(i, j) += -alpha_loc * fe_values.shape_value(j,q)
                                        * fe_values.shape_value(i,q)
                                        * fe_values.JxW(q);
-                  
+
+                  cell_matrix(i, j) += 2*alpha_loc * fe_values.shape_value(j,q)
+                                         * solution_loc[q]
+                                         * fe_values.shape_value(i,q)
                 }
 
               // Assemble the residual vector (with changed sign).
@@ -168,12 +173,17 @@ NonLinearParabolic3D::assemble_system()
                                   * fe_values.shape_value(i, q)
                                   * fe_values.JxW(q);
 
-              //TODO: rhs terms
+              cell_residual(i) -= d_loc * solution_gradient_loc[q]
+                                  * fe_values.shape_grad(i, q)
+                                  * fe_values.JxW(q);
 
-              cell_residual(i) -= sigma_loc * solution_loc[q]
+              cell_residual(i) -= -alpha_loc * solution_loc[q]
                                   * fe_values.shape_value(i,q)
                                   * fe_values.JxW(q);
-              
+
+              cell_residual(i) -= alpha_loc * solution_loc[q] * solution_loc[q]
+                                  * fe_values.shape_value(i,q)
+                                  * fe_values.JxW(q);
             }
         }
 

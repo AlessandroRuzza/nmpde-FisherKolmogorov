@@ -1,7 +1,23 @@
 cmake_minimum_required(VERSION 3.12.0)
-project(project_title LANGUAGES CXX C)
+project(exam LANGUAGES CXX C)
 
-include(../common/cmake-common.cmake)
+include(cmake-common.cmake)
 
-add_executable(lab-01 src/lab-01.cpp src/Poisson1D.cpp)
-deal_ii_setup_target(lab-01)
+#Only thing to be changed across different files
+add_executable(main src/main.cpp src/NonLinearParabolic3D.cpp)
+
+deal_ii_setup_target(main)
+
+add_custom_target(remove_vtu_files
+        COMMAND ${CMAKE_COMMAND} -E remove
+        "${CMAKE_BINARY_DIR}/*.pvtu"
+        "${CMAKE_BINARY_DIR}/*.vtu"
+        COMMENT "Removing all .pvtu and .vtu files from the build directory"
+)
+
+set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
+        "${CMAKE_BINARY_DIR}/*.pvtu"
+        "${CMAKE_BINARY_DIR}/*.vtu"
+)
+
+add_dependencies(main remove_vtu_files)

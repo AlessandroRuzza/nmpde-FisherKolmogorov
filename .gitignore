@@ -34,3 +34,8 @@
 *.app
 
 */build/*
+build
+cmake-build-debug
+.idea
+mesh/brain
+

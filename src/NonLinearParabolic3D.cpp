@@ -118,8 +118,6 @@ NonLinearParabolic3D::assemble_system()
   // Value of the solution at previous timestep (un) on current cell.
   std::vector<double> solution_old_loc(n_q);
 
-  forcing_term.set_time(time);
-
   for (const auto &cell : dof_handler.active_cell_iterators())
     {
       if (!cell->is_locally_owned())
@@ -134,12 +132,11 @@ NonLinearParabolic3D::assemble_system()
       fe_values.get_function_gradients(solution, solution_gradient_loc);
       fe_values.get_function_values(solution_old, solution_old_loc);
 
-      forcing_term.set_time(time);
-
       for (unsigned int q = 0; q < n_q; ++q)
         {
           // Evaluate coefficients on this quadrature node.
-          const double d_loc = d.value(fe_values.quadrature_point(q));
+          const Tensor<2,dim> d_loc = d.tensor_value(fe_values.quadrature_point(q),
+                                                     fe_values.normal_vector(q));
           const double alpha_loc = alpha.value(fe_values.quadrature_point(q));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
@@ -163,6 +160,7 @@ NonLinearParabolic3D::assemble_system()
                   cell_matrix(i, j) += 2*alpha_loc * fe_values.shape_value(j,q)
                                          * solution_loc[q]
                                          * fe_values.shape_value(i,q)
+                                         * fe_values.JxW(q);
                 }
 
               // Assemble the residual vector (with changed sign).
@@ -214,28 +212,10 @@ void
 NonLinearParabolic3D::solve_newton()
 {
   const unsigned int n_max_iters        = 1000;
-  const double       residual_tolerance = 1e-6;
+  const double       residual_tolerance = 1e-5;
 
   unsigned int n_iter        = 0;
   double       residual_norm = residual_tolerance + 1;
-
-  // We apply the boundary conditions to the initial guess (which is stored in
-  // solution_owned and solution).
-  {
-    IndexSet dirichlet_dofs = DoFTools::extract_boundary_dofs(dof_handler);
-    dirichlet_dofs          = dirichlet_dofs & dof_handler.locally_owned_dofs();
-    
-    dirichlet_func.set_time(time);
-
-    TrilinosWrappers::MPI::Vector vector_dirichlet(solution_owned);
-    VectorTools::interpolate(dof_handler, dirichlet_func, vector_dirichlet);
-
-    for (const auto &idx : dirichlet_dofs)
-      solution_owned[idx] = vector_dirichlet[idx];
-
-    solution_owned.compress(VectorOperation::insert);
-    solution = solution_owned;
-  }
 
   while (n_iter < n_max_iters && residual_norm > residual_tolerance)
     {
@@ -291,7 +271,7 @@ NonLinearParabolic3D::solve()
   {
     pcout << "Applying the initial condition" << std::endl;
 
-    VectorTools::interpolate(dof_handler, u_0, solution_owned);
+    VectorTools::interpolate(dof_handler, c_0, solution_owned);
     solution = solution_owned;
 
     // Output the initial solution.
@@ -320,32 +300,4 @@ NonLinearParabolic3D::solve()
 
       pcout << std::endl;
     }
-}
-
-double
-NonLinearParabolic3D::compute_error(const VectorTools::NormType &norm_type)
-{
-  FE_SimplexP<dim> fe_linear(1);
-  MappingFE        mapping(fe_linear);
-  
-  
-  const QGaussSimplex<dim> quadrature_error(r + 2);
-  
-  exact_solution.set_time(time);
-  
-  
-  // First we compute the norm on each element, and store it in a vector.
-  Vector<double> error_per_cell(mesh.n_active_cells());
-  VectorTools::integrate_difference(mapping,
-                                    dof_handler,
-                                    solution,
-                                    exact_solution,
-                                    error_per_cell,
-                                    quadrature_error,
-                                    norm_type);
-  
-  // Then, we add out all the cells.
-  const double error = VectorTools::compute_global_error(mesh, error_per_cell, norm_type);
-  
-  return error;
 }

@@ -28,6 +28,7 @@
 
 #include <fstream>
 #include <iostream>
+#include <algorithm>
 
 using namespace dealii;
 
@@ -37,17 +38,33 @@ class NonLinearParabolic3D
 public:
   // Physical dimension (1D, 2D, 3D)
   static constexpr unsigned int dim = 3;
+  
+  static constexpr double dext = 8e-6;
+  static constexpr double daxn = 8e-5;
+  static constexpr double k0 = 6e-1;
+  static constexpr double k1 = 5e-1;
+  static constexpr double k12 = 1;
+  static constexpr double k_tilde1 = 3e-1;
 
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>
   {
   public:
-    virtual double
-    value(const Point<dim> & p,
-          const unsigned int /*component*/ = 0) const override
+    virtual Tensor<2,dim>
+    tensor_value(const Point<dim> &p, const Tensor<1,dim> normal_vector) const
     {
-      double x = p[0], y = p[1], z = p[2];
-      return 1; //TODO: insert real data for D matrix
+      // double x = p[0], y = p[1], z = p[2];
+      Tensor<2,dim> identity;
+      for(unsigned int i=0; i<dim; i++) identity[i,i] = 1;
+      
+      //Tensor<2,dim> tensor_normal = normal_vector * normal_vector;
+      
+      dealii::Tensor<2, dim> tensor_product;
+      for (unsigned int i = 0; i < dim; ++i)
+        for (unsigned int j = 0; j < dim; ++j)
+          tensor_product[i,j] = normal_vector[i] * normal_vector[j];
+      
+      return dext*identity + daxn * tensor_product;
     }
   };
 
@@ -56,11 +73,10 @@ public:
   {
   public:
     virtual double
-    value(const Point<dim> &p,
+    value(const Point<dim> &/*p*/,
           const unsigned int /*component*/ = 0) const override
     {
-      double x = p[0], y = p[1], z = p[2];
-      return 1;      //TODO: insert real data for alpha
+      return k12 * k0/k1 - k_tilde1;
     }
   };
 
@@ -73,8 +89,12 @@ public:
           const unsigned int /*component*/ = 0) const override
     {
       double x = p[0], y = p[1], z = p[2];
+      double x0 = 44.947, y0 = 95.2539, z0=33.1461;
+      double r = 10.0;
       
-      return 0; //TODO: insert real data for c0
+      return std::max(0.0, 1.0 - ((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0)) / r );
+      
+      //return abs(sin(x) + sin(y) + sin(z)) / 15.0; //TODO: insert real data for c0
     }
   };
   

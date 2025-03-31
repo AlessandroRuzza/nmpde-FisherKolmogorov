@@ -224,7 +224,16 @@ NonLinearParabolic3D::solve_newton()
     {
       assemble_system();
 
-      
+      for (int i = 0; i < jacobian_matrix.size(); i++)
+      {
+        for (int j = 0; j < jacobian_matrix.size(); j++)
+        {
+          if(jacobian_matrix(i,j) != jacobian_matrix(j,i)){
+            std::cout << "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" << std::endl;
+            break;
+          }
+        }
+      }
 
       residual_norm = residual_vector.l2_norm();
 

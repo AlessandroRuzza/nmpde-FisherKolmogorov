@@ -46,6 +46,9 @@ public:
   static constexpr double k12 = 1;
   static constexpr double k_tilde1 = 3e-1;
 
+  static constexpr Point<3> center = Point<3>(44.947, 95.2539, 33.1461);
+  static constexpr double radius = 10.0;
+
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>
   {
@@ -89,9 +92,9 @@ public:
           const unsigned int /*component*/ = 0) const override
     {
       double x = p[0], y = p[1], z = p[2];
-      double x0 = 44.947, y0 = 95.2539, z0=33.1461;
-      double r = 10.0;
-      
+      double x0 = center[0], y0 = center[1], z0=center[2];
+      double r = radius;
+
       return std::max(0.0, 1.0 - ((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0)) / r );
       
       //return abs(sin(x) + sin(y) + sin(z)) / 15.0; //TODO: insert real data for c0

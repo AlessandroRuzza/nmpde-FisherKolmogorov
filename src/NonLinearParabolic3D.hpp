@@ -39,14 +39,15 @@ public:
   // Physical dimension (1D, 2D, 3D)
   static constexpr unsigned int dim = 3;
   
-  static constexpr double dext = 8e-6;
-  static constexpr double daxn = 8e-5;
-  static constexpr double k0 = 6e-1;
-  static constexpr double k1 = 5e-1;
-  static constexpr double k12 = 1;
-  static constexpr double k_tilde1 = 3e-1;
+  static constexpr double dext = 8e-2;
+  static constexpr double daxn = 8e-1;
+  static constexpr double k0 = 6;
+  static constexpr double k1 = 5;
+  static constexpr double k12 = 10;
+  static constexpr double k_tilde1 = 3;
 
-  static constexpr Point<3> center = Point<3>(44.947, 95.2539, 33.1461);
+  // Misfolded protein start sphere center and radius
+  static constexpr double x0 = 44.947, y0 = 95.2539, z0=33.1461;
   static constexpr double radius = 10.0;
 
   // Function for the mu_0 coefficient.
@@ -92,10 +93,8 @@ public:
           const unsigned int /*component*/ = 0) const override
     {
       double x = p[0], y = p[1], z = p[2];
-      double x0 = center[0], y0 = center[1], z0=center[2];
-      double r = radius;
 
-      return std::max(0.0, 1.0 - ((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0)) / r );
+      return std::max(0.0, 1.0 - ((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0)) / radius );
       
       //return abs(sin(x) + sin(y) + sin(z)) / 15.0; //TODO: insert real data for c0
     }

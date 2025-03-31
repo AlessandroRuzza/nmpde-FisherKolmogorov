@@ -93,7 +93,9 @@ NonLinearParabolic3D::assemble_system()
 
   FEValues<dim> fe_values(*fe,
                           *quadrature,
-                          update_values | update_gradients | update_quadrature_points | update_JxW_values);
+                          update_values |
+                          update_gradients | update_quadrature_points |
+                          update_JxW_values);
   
   
   FEFaceValues<dim> fe_values_boundary(*fe,
@@ -135,8 +137,9 @@ NonLinearParabolic3D::assemble_system()
       for (unsigned int q = 0; q < n_q; ++q)
         {
           // Evaluate coefficients on this quadrature node.
-          const Tensor<2,dim> d_loc = d.tensor_value(fe_values.quadrature_point(q),
-                                                     fe_values.normal_vector(q));
+          Tensor<2,dim> d_loc;
+          d.tensor_value(fe_values.quadrature_point(q), d_loc);
+
           const double alpha_loc = alpha.value(fe_values.quadrature_point(q));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
@@ -171,7 +174,7 @@ NonLinearParabolic3D::assemble_system()
                                   * fe_values.shape_value(i, q)
                                   * fe_values.JxW(q);
 
-              cell_residual(i) -= d_loc * solution_gradient_loc[q]
+              cell_residual(i) -= (d_loc * solution_gradient_loc[q])
                                   * fe_values.shape_grad(i, q)
                                   * fe_values.JxW(q);
 
@@ -220,6 +223,9 @@ NonLinearParabolic3D::solve_newton()
   while (n_iter < n_max_iters && residual_norm > residual_tolerance)
     {
       assemble_system();
+
+      
+
       residual_norm = residual_vector.l2_norm();
 
       pcout << "  Newton iteration " << n_iter << "/" << n_max_iters

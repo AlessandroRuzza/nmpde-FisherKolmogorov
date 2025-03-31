@@ -201,11 +201,11 @@ NonLinearParabolic3D::assemble_system()
 void
 NonLinearParabolic3D::solve_linear_system()
 {
-  SolverControl solver_control(1000, 1e-6); //* residual_vector.l2_norm());
+  SolverControl solver_control(10000, 1e-9); //* residual_vector.l2_norm());
 
-  SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
-  TrilinosWrappers::PreconditionSSOR preconditioner;
-  preconditioner.initialize(jacobian_matrix, TrilinosWrappers::PreconditionSSOR::AdditionalData(1.0));
+  SolverBicgstab<TrilinosWrappers::MPI::Vector> solver(solver_control);
+  TrilinosWrappers::PreconditionSOR preconditioner;
+  preconditioner.initialize(jacobian_matrix, TrilinosWrappers::PreconditionSOR::AdditionalData(1.0));
 
   solver.solve(jacobian_matrix, delta_owned, residual_vector, preconditioner);
   pcout << "  " << solver_control.last_step() << " GMRES iterations" << std::endl;
@@ -215,7 +215,7 @@ void
 NonLinearParabolic3D::solve_newton()
 {
   const unsigned int n_max_iters        = 1000;
-  const double       residual_tolerance = 1e-5;
+  const double       residual_tolerance = 1e-2;
 
   unsigned int n_iter        = 0;
   double       residual_norm = residual_tolerance + 1;
@@ -223,17 +223,7 @@ NonLinearParabolic3D::solve_newton()
   while (n_iter < n_max_iters && residual_norm > residual_tolerance)
     {
       assemble_system();
-
-      for (int i = 0; i < jacobian_matrix.size(); i++)
-      {
-        for (int j = 0; j < jacobian_matrix.size(); j++)
-        {
-          if(jacobian_matrix(i,j) != jacobian_matrix(j,i)){
-            std::cout << "NOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO" << std::endl;
-            break;
-          }
-        }
-      }
+      // NOT Symmetric
 
       residual_norm = residual_vector.l2_norm();
 

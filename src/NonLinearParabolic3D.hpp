@@ -18,6 +18,7 @@
 #include <deal.II/grid/grid_tools.h>
 
 #include <deal.II/lac/solver_cg.h>
+#include <deal.II/lac/solver_bicgstab.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
@@ -39,12 +40,12 @@ public:
   // Physical dimension (1D, 2D, 3D)
   static constexpr unsigned int dim = 3;
   
-  static constexpr double dext = 8e-2;
-  static constexpr double daxn = 8e-1;
-  static constexpr double k0 = 6;
-  static constexpr double k1 = 5;
-  static constexpr double k12 = 10;
-  static constexpr double k_tilde1 = 3;
+  static constexpr double dext = 8e-6;
+  static constexpr double daxn = 8e-5;
+  static constexpr double k0 = 6e-1;
+  static constexpr double k1 = 5e-1;
+  static constexpr double k12 = 1;
+  static constexpr double k_tilde1 = 3e-1;
 
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>

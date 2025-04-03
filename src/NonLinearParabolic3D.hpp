@@ -18,6 +18,7 @@
 #include <deal.II/grid/grid_tools.h>
 
 #include <deal.II/lac/solver_cg.h>
+#include <deal.II/lac/solver_bicgstab.h>
 #include <deal.II/lac/solver_gmres.h>
 #include <deal.II/lac/trilinos_precondition.h>
 #include <deal.II/lac/trilinos_sparse_matrix.h>
@@ -53,22 +54,43 @@ public:
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>
   {
+  private:
+    const Point<dim> mesh_center;
+
+    Tensor<1,dim> get_normal_at(const Point<dim> &p) const {
+        Tensor<1, dim> retVal;
+        for (unsigned int i = 0; i < dim; i++)
+        {
+          // divide by distance to normalize vector
+          retVal[i] = (p[i] - mesh_center[i]) / (p.distance(mesh_center) + 1e-6); // add an eps to avoid /0 at mesh center 
+        }
+
+        return retVal ;// / retVal.l2_norm();
+    }
+
   public:
-    virtual Tensor<2,dim>
-    tensor_value(const Point<dim> &p, const Tensor<1,dim> normal_vector) const
+    FunctionD(Point<dim> mesh_center_) : mesh_center{mesh_center_} 
+    {}
+
+    virtual void
+    tensor_value(const Point<dim> &p, Tensor<2,dim> &retVal) const
     {
       // double x = p[0], y = p[1], z = p[2];
+
       Tensor<2,dim> identity;
-      for(unsigned int i=0; i<dim; i++) identity[i,i] = 1;
-      
-      //Tensor<2,dim> tensor_normal = normal_vector * normal_vector;
-      
-      dealii::Tensor<2, dim> tensor_product;
-      for (unsigned int i = 0; i < dim; ++i)
-        for (unsigned int j = 0; j < dim; ++j)
-          tensor_product[i,j] = normal_vector[i] * normal_vector[j];
-      
-      return dext*identity + daxn * tensor_product;
+      for(unsigned int i=0; i<dim; i++){
+         identity[i][i] = 1;
+      }
+
+      Tensor<1, dim> normal_vector = get_normal_at(p);
+      Tensor<2, dim> tensor_product = outer_product(normal_vector, normal_vector);
+
+      // for (unsigned int i = 0; i < dim; ++i)
+      //   for (unsigned int j = 0; j < dim; ++j){
+      //     tensor_product[i][j] = normal_vector[i] * normal_vector[j];
+      //   }
+
+      retVal = dext*identity + daxn * tensor_product;
     }
   };
 
@@ -102,15 +124,18 @@ public:
   
   // Constructor. We provide the final time, time step Delta t and theta method
   // parameter as constructor arguments.
-  NonLinearParabolic3D(const std::string  &mesh_file_name_,
+  NonLinearParabolic3D(const std::string  &mesh_file_name_, 
+                const Point<dim> mesh_center_,
                 const unsigned int &r_,
                 const double       &T_,
                 const double       &deltat_)
     : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
     , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
     , pcout(std::cout, mpi_rank == 0)
+    , d(mesh_center_)
     , T(T_)
     , mesh_file_name(mesh_file_name_)
+    , mesh_center(mesh_center_)
     , r(r_)
     , deltat(deltat_)
     , mesh(MPI_COMM_WORLD)
@@ -172,6 +197,7 @@ protected:
 
   // Mesh file name.
   const std::string mesh_file_name;
+  const Point<dim> mesh_center;
 
   // Polynomial degree.
   const unsigned int r;

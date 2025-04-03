@@ -93,7 +93,9 @@ NonLinearParabolic3D::assemble_system()
 
   FEValues<dim> fe_values(*fe,
                           *quadrature,
-                          update_values | update_gradients | update_quadrature_points | update_JxW_values);
+                          update_values |
+                          update_gradients | update_quadrature_points |
+                          update_JxW_values);
   
   
   FEFaceValues<dim> fe_values_boundary(*fe,
@@ -135,8 +137,9 @@ NonLinearParabolic3D::assemble_system()
       for (unsigned int q = 0; q < n_q; ++q)
         {
           // Evaluate coefficients on this quadrature node.
-          const Tensor<2,dim> d_loc = d.tensor_value(fe_values.quadrature_point(q),
-                                                     fe_values.normal_vector(q));
+          Tensor<2,dim> d_loc;
+          d.tensor_value(fe_values.quadrature_point(q), d_loc);
+
           const double alpha_loc = alpha.value(fe_values.quadrature_point(q));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
@@ -171,7 +174,7 @@ NonLinearParabolic3D::assemble_system()
                                   * fe_values.shape_value(i, q)
                                   * fe_values.JxW(q);
 
-              cell_residual(i) -= d_loc * solution_gradient_loc[q]
+              cell_residual(i) -= (d_loc * solution_gradient_loc[q])
                                   * fe_values.shape_grad(i, q)
                                   * fe_values.JxW(q);
 
@@ -198,11 +201,11 @@ NonLinearParabolic3D::assemble_system()
 void
 NonLinearParabolic3D::solve_linear_system()
 {
-  SolverControl solver_control(1000, 1e-6); //* residual_vector.l2_norm());
+  SolverControl solver_control(10000, 1e-9); //* residual_vector.l2_norm());
 
-  SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
-  TrilinosWrappers::PreconditionSSOR preconditioner;
-  preconditioner.initialize(jacobian_matrix, TrilinosWrappers::PreconditionSSOR::AdditionalData(1.0));
+  SolverBicgstab<TrilinosWrappers::MPI::Vector> solver(solver_control);
+  TrilinosWrappers::PreconditionSOR preconditioner;
+  preconditioner.initialize(jacobian_matrix, TrilinosWrappers::PreconditionSOR::AdditionalData(1.0));
 
   solver.solve(jacobian_matrix, delta_owned, residual_vector, preconditioner);
   pcout << "  " << solver_control.last_step() << " GMRES iterations" << std::endl;
@@ -212,7 +215,7 @@ void
 NonLinearParabolic3D::solve_newton()
 {
   const unsigned int n_max_iters        = 1000;
-  const double       residual_tolerance = 1e-5;
+  const double       residual_tolerance = 1e-2;
 
   unsigned int n_iter        = 0;
   double       residual_norm = residual_tolerance + 1;
@@ -220,6 +223,8 @@ NonLinearParabolic3D::solve_newton()
   while (n_iter < n_max_iters && residual_norm > residual_tolerance)
     {
       assemble_system();
+      // NOT Symmetric
+
       residual_norm = residual_vector.l2_norm();
 
       pcout << "  Newton iteration " << n_iter << "/" << n_max_iters

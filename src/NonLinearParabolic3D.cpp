@@ -152,7 +152,7 @@ NonLinearParabolic3D::assemble_system()
                                        / deltat
                                        * fe_values.JxW(q);
 
-                  cell_matrix(i, j) += d_loc * fe_values.shape_grad(j, q)
+                  cell_matrix(i, j) += (d_loc * fe_values.shape_grad(j, q))
                                        * fe_values.shape_grad(i, q)
                                        * fe_values.JxW(q);
 
@@ -203,7 +203,7 @@ NonLinearParabolic3D::solve_linear_system()
 {
   SolverControl solver_control(10000, 1e-9); //* residual_vector.l2_norm());
 
-  SolverBicgstab<TrilinosWrappers::MPI::Vector> solver(solver_control);
+  SolverGMRES<TrilinosWrappers::MPI::Vector> solver(solver_control);
   TrilinosWrappers::PreconditionSOR preconditioner;
   preconditioner.initialize(jacobian_matrix, TrilinosWrappers::PreconditionSOR::AdditionalData(1.0));
 
@@ -215,7 +215,7 @@ void
 NonLinearParabolic3D::solve_newton()
 {
   const unsigned int n_max_iters        = 1000;
-  const double       residual_tolerance = 1e-2;
+  const double       residual_tolerance = 1e-7;
 
   unsigned int n_iter        = 0;
   double       residual_norm = residual_tolerance + 1;
@@ -301,7 +301,12 @@ NonLinearParabolic3D::solve()
       // problem.
       solve_newton();
 
-      output(time_step);
+      if(time_step % outputPeriod == 0)
+        output(time_step/outputPeriod);
+
+      // Uncomment to always output last time step.
+      // else if(time > T) 
+      //   output(int(time_step/outputPeriod)+1);
 
       pcout << std::endl;
     }

@@ -40,16 +40,19 @@ public:
   // Physical dimension (1D, 2D, 3D)
   static constexpr unsigned int dim = 3;
   
-  static constexpr double dext = 8e-2;
-  static constexpr double daxn = 8e-1;
-  static constexpr double k0 = 6;
-  static constexpr double k1 = 5;
-  static constexpr double k12 = 10;
-  static constexpr double k_tilde1 = 3;
+  static constexpr double dext = 8e-5;
+  static constexpr double daxn = 8e-4;
+  // static constexpr double k0 = 5;
+  // static constexpr double k1 = 5;
+  // static constexpr double k12 = 1;
+  // static constexpr double k_tilde1 = 3e-1;
+
+  static constexpr double alpha_coeff = 0.2;
 
   // Misfolded protein start sphere center and radius
-  static constexpr double x0 = 44.947, y0 = 95.2539, z0=33.1461;
-  static constexpr double radius = 10.0;
+  // static constexpr double x0 = 44.947, y0 = 95.2539, z0=33.1461;
+  static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5;
+  static constexpr double radius = 0.1;
 
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>
@@ -57,19 +60,21 @@ public:
   private:
     const Point<dim> mesh_center;
 
-    Tensor<1,dim> get_normal_at(const Point<dim> &p) const {
-        Tensor<1, dim> retVal;
+    Tensor<1,dim> get_axon_at(const Point<dim> &p) const {
+        Tensor<1, dim> retVec;
         for (unsigned int i = 0; i < dim; i++)
         {
           // divide by distance to normalize vector
-          retVal[i] = (p[i] - mesh_center[i]) / (p.distance(mesh_center) + 1e-6); // add an eps to avoid /0 at mesh center 
+          retVec[i] = (p[i] - mesh_center[i]);// / (p.distance(mesh_center) + 1e-8); // add an eps to avoid /0 at mesh center 
         }
-
-        return retVal ;// / retVal.l2_norm();
+        if (retVec.norm() == 0)
+          return retVec;
+        else
+          return retVec / retVec.norm();
     }
 
   public:
-    FunctionD(Point<dim> mesh_center_) : mesh_center{mesh_center_} 
+    FunctionD(const Point<dim> mesh_center_) : mesh_center{mesh_center_} 
     {}
 
     virtual void
@@ -82,8 +87,8 @@ public:
          identity[i][i] = 1;
       }
 
-      Tensor<1, dim> normal_vector = get_normal_at(p);
-      Tensor<2, dim> tensor_product = outer_product(normal_vector, normal_vector);
+      Tensor<1, dim> axonal_vector = get_axon_at(p);
+      Tensor<2, dim> tensor_product = outer_product(axonal_vector, axonal_vector);
 
       // for (unsigned int i = 0; i < dim; ++i)
       //   for (unsigned int j = 0; j < dim; ++j){
@@ -102,7 +107,8 @@ public:
     value(const Point<dim> &/*p*/,
           const unsigned int /*component*/ = 0) const override
     {
-      return k12 * k0/k1 - k_tilde1;
+      // return k12 * k0/k1 - k_tilde1;
+      return alpha_coeff;
     }
   };
 
@@ -128,7 +134,8 @@ public:
                 const Point<dim> mesh_center_,
                 const unsigned int &r_,
                 const double       &T_,
-                const double       &deltat_)
+                const double       &deltat_,
+                const unsigned int &outputPeriod_)
     : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
     , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
     , pcout(std::cout, mpi_rank == 0)
@@ -138,6 +145,7 @@ public:
     , mesh_center(mesh_center_)
     , r(r_)
     , deltat(deltat_)
+    , outputPeriod(outputPeriod_)
     , mesh(MPI_COMM_WORLD)
   {}
 
@@ -204,6 +212,7 @@ protected:
 
   // Time step.
   const double deltat;
+  const unsigned int outputPeriod;
 
   // Mesh.
   parallel::fullydistributed::Triangulation<dim> mesh;

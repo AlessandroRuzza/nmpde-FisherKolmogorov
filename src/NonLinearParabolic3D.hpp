@@ -52,7 +52,7 @@ public:
   // Misfolded protein start sphere center and radius
   // static constexpr double x0 = 44.947, y0 = 95.2539, z0=33.1461;
   static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5;
-  static constexpr double radius = 0.1;
+  static constexpr double radius = 0.01;
 
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>
@@ -123,8 +123,6 @@ public:
       double x = p[0], y = p[1], z = p[2];
 
       return std::max(0.0, 1.0 - ((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0)) / radius );
-      
-      //return abs(sin(x) + sin(y) + sin(z)) / 15.0; //TODO: insert real data for c0
     }
   };
   

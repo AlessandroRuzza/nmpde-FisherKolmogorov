@@ -94,7 +94,8 @@ NonLinearParabolic3D::assemble_system()
   FEValues<dim> fe_values(*fe,
                           *quadrature,
                           update_values |
-                          update_gradients | update_quadrature_points |
+                          update_gradients | 
+                          update_quadrature_points |
                           update_JxW_values);
   
   

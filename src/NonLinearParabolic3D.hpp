@@ -40,8 +40,8 @@ public:
   // Physical dimension (1D, 2D, 3D)
   static constexpr unsigned int dim = 3;
   
-  static constexpr double dext = 8e-5;
-  static constexpr double daxn = 8e-4;
+  static constexpr double dext = 8;
+  static constexpr double daxn = 80;
   // static constexpr double k0 = 5;
   // static constexpr double k1 = 5;
   // static constexpr double k12 = 1;
@@ -50,8 +50,8 @@ public:
   static constexpr double alpha_coeff = 0.2;
 
   // Misfolded protein start sphere center and radius
-  // static constexpr double x0 = 44.947, y0 = 95.2539, z0=33.1461;
-  static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5;
+  static constexpr double x0 = 44.947, y0 = 95.2539, z0=33.1461; //mm
+  //static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5;
   static constexpr double radius = 0.01;
 
   // Function for the mu_0 coefficient.

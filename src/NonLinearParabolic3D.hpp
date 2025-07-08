@@ -50,22 +50,24 @@ public:
   static constexpr double alpha_coeff = 2;
 
   // Misfolded protein start sphere center and radius
-  static constexpr double x0 = 0, y0 = 0, z0=25; //mm
-  //static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5;
-  static constexpr double radius = 5;
+  static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE
+  static constexpr double radius = 20;
+
+  // static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5; // CUBE
+  // static constexpr double radius = 0.2;
 
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>
   {
   private:
-    const Point<dim> mesh_center;
+    const Point<dim> axonal_center;
 
     Tensor<1,dim> get_axon_at(const Point<dim> &p) const {
         Tensor<1, dim> retVec;
         for (unsigned int i = 0; i < dim; i++)
         {
           // divide by distance to normalize vector
-          retVec[i] = (p[i] - mesh_center[i]);// / (p.distance(mesh_center) + 1e-8); // add an eps to avoid /0 at mesh center 
+          retVec[i] = (p[i] - axonal_center[i]);// / (p.distance(axonal_center) + 1e-8); // add an eps to avoid /0 at mesh center 
         }
         if (retVec.norm() == 0)
           return retVec;
@@ -74,7 +76,7 @@ public:
     }
 
   public:
-    FunctionD(const Point<dim> mesh_center_) : mesh_center{mesh_center_} 
+    FunctionD(const Point<dim> axonal_center_) : axonal_center{axonal_center_} 
     {}
 
     virtual void
@@ -122,7 +124,7 @@ public:
     {
       double x = p[0], y = p[1], z = p[2];
 
-      return std::max(0.0, 0.5 - ((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0)) / radius );
+      return std::max(0.0, 0.3 - ((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0)) / radius );
     }
   };
   
@@ -140,7 +142,7 @@ public:
     , d(mesh_center_)
     , T(T_)
     , mesh_file_name(mesh_file_name_)
-    , mesh_center(mesh_center_)
+    , axonal_center(mesh_center_)
     , r(r_)
     , deltat(deltat_)
     , outputPeriod(outputPeriod_)
@@ -203,7 +205,7 @@ protected:
 
   // Mesh file name.
   const std::string mesh_file_name;
-  const Point<dim> mesh_center;
+  const Point<dim> axonal_center;
 
   // Polynomial degree.
   const unsigned int r;

@@ -18,14 +18,17 @@ main(int argc, char * argv[])
   const double deltat = 0.1;
   // const double theta  = 0.5;
 
-  std::string mesh = "../mesh/mshs/brain_coarse.msh";
-  const Point<3> mesh_center = {0.0, 0.0, 25.0};
+  std::string mesh = "../mesh/brain_coarse.msh";
+  const Point<3> axonal_center = {0.0, 0.0, 0.0};
   
   // std::string mesh = "../mesh/brain/half/finer-normalized.msh";
-  // const Point<3> mesh_center = {0.5, 500, 0.5};
+  // const Point<3> axonal_center = {0.5, 500, 0.5};
+  
+  // std::string mesh = "../mesh/mesh-cube-40.msh";
+  // const Point<3> axonal_center = {0.5, 500, 0.5};
   
   
-  NonLinearParabolic3D problem(mesh, mesh_center, r, T, deltat, 5);
+  NonLinearParabolic3D problem(mesh, axonal_center, r, T, deltat, 5);
 
   problem.setup();
   problem.solve();

@@ -215,8 +215,8 @@ NonLinearParabolic3D::solve_linear_system()
 void
 NonLinearParabolic3D::solve_newton()
 {
-  const unsigned int n_max_iters        = 1000;
-  const double       residual_tolerance = 1e-7;
+  const unsigned int n_max_iters        = 10;
+  const double       residual_tolerance = 1e-4;
 
   unsigned int n_iter        = 0;
   double       residual_norm = residual_tolerance + 1;

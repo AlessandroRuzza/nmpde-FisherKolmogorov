@@ -47,10 +47,10 @@ public:
   // static constexpr double k12 = 1;
   // static constexpr double k_tilde1 = 3e-1;
 
-  static constexpr double alpha_coeff = 0.2;
+  static constexpr double alpha_coeff = 2;
 
   // Misfolded protein start sphere center and radius
-  static constexpr double x0 = 44.947, y0 = 95.2539, z0=33.1461; //mm
+  static constexpr double x0 = 0, y0 = 0, z0=25; //mm
   //static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5;
   static constexpr double radius = 5;
 

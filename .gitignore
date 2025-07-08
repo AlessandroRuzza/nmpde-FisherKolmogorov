@@ -37,6 +37,6 @@
 build
 cmake-build-debug
 .idea
-mesh/brain
+mesh
 building-mesh
 

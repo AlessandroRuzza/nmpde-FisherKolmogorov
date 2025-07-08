@@ -18,7 +18,7 @@ main(int argc, char * argv[])
   const double deltat = 3;
   // const double theta  = 0.5;
 
-  std::string mesh = "../mesh/brain/brain-h3.0-halved-faces-final.msh";
+  std::string mesh = "../mesh/mshs/brain_coarse.msh";
   const Point<3> mesh_center = {45.0, 78.0, 62.0};
   
   // std::string mesh = "../mesh/brain/half/finer-normalized.msh";

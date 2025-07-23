@@ -1,0 +1,26 @@
+Bootstrap: docker
+From: ubuntu:22.04
+
+%labels
+    Author AmadiniQuartieriRuzzaSalvi
+
+%post
+    set -e
+    # Install build tools
+    apt-get update && apt-get install -y \
+        git \
+        cmake \
+        build-essential \
+        && rm -rf /var/lib/apt/lists/*
+    # Prepare build directory
+    mkdir -p /opt/app/build
+    # Copy source and build
+    cd /opt/app/build
+    cmake ..
+    make
+
+%files
+    . /opt/app
+
+%runscript
+    exec /opt/app/build/main

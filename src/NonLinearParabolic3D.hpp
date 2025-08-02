@@ -2,6 +2,7 @@
 #define NON_LINEAR_PARABOLIC_3D_HPP
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/tensor.h>
 
 #include <deal.II/distributed/fully_distributed_tria.h>
 
@@ -38,10 +39,10 @@ class NonLinearParabolic3D
 {
 public:
   // Physical dimension (1D, 2D, 3D)
-  static constexpr unsigned int dim = 3;
+  static constexpr unsigned int dim = 2;
   
-  static constexpr double dext = 8;
-  static constexpr double daxn = 80;
+  static constexpr double dext = 6;
+  static constexpr double daxn = 20;
   // static constexpr double k0 = 5;
   // static constexpr double k1 = 5;
   // static constexpr double k12 = 1;
@@ -50,8 +51,14 @@ public:
   static constexpr double alpha_coeff = 2;
 
   // Misfolded protein start sphere center and radius
-  static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE
-  static constexpr double radius = 20;
+  // static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE
+  // static constexpr double radius = 20;
+
+  // static constexpr double x0 = 0, y0 = 0, z0=0; // MNI_mesh
+  // static constexpr double radius = 20;
+  
+  static constexpr double x0 = 230, y0 = 100, z0=0; // SAGITTAL
+  static constexpr double radius = 15;
 
   // static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5; // CUBE
   // static constexpr double radius = 0.2;
@@ -59,25 +66,105 @@ public:
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>
   {
-  private:
+  private:  
+    static constexpr bool override_radial_axon = true;
+    static constexpr double center_threshold = 10;
+
     const Point<dim> axonal_center;
 
-    Tensor<1,dim> get_axon_at(const Point<dim> &p) const {
-        Tensor<1, dim> retVec;
-        for (unsigned int i = 0; i < dim; i++)
-        {
-          // divide by distance to normalize vector
-          retVec[i] = (p[i] - axonal_center[i]);// / (p.distance(axonal_center) + 1e-8); // add an eps to avoid /0 at mesh center 
-        }
-        if (retVec.norm() == 0)
-          return retVec;
-        else
-          return retVec / retVec.norm();
-    }
+    // Attributes
+    static constexpr double a = 5000; // Major axis
+    static constexpr double b = 3000; // Minor axis
+    static constexpr double c = 3000; // Z axis (for 3D)
+    Tensor<1, 3, double> n; // Normal to plane
+    Tensor<1, 3, double> u; // Major axis direction (in plane, unit)
+    Tensor<1, 3> v;       // Minor axis direction (in plane, unit)
 
+    Tensor<1,2> get_axon_at(const Point<2> &p) const {
+        Tensor<1, 2> tangent;
+        // Shifted coordinates
+        double x = p[0] - axonal_center[0];
+        double y = p[1] - axonal_center[1];
+
+        Tensor<1, 2> dist_center;
+        dist_center[0] = x; dist_center[1] = y;
+        if(dist_center.norm() < center_threshold){ // If too close to the axonal_center, use isotropic diffusion
+          Tensor<1,2> zero;
+          zero[0] = 0; zero[1] = 0;
+          return zero;
+        }
+
+        // If (x, y) is on the ellipse, tangent direction:
+        // dx/dt = -a * sin(t), dy/dt = b * cos(t)
+        // But as a general formula, tangent at (x, y):
+        tangent[0] = -b*b * y;
+        tangent[1] = a*a * x;
+
+        // Normalize the tangent
+        const double norm = tangent.norm();
+        if (norm > 0)
+            tangent /= norm;
+
+        const bool is_inside_ellipse = ((x*x)/(a*a) + (y*y)/(b*b)) <= 1.0 ;
+        if (!is_inside_ellipse){ // Outside ellipse perimeter
+            Tensor<1,2> normal;
+            normal[0] = -tangent[1];
+            normal[1] = tangent[0];
+            return normal;
+        }
+        else  // Inside ellipse perimeter
+            return tangent;
+    }
+    Tensor<1,3> get_axon_at(const dealii::Point<3> &p) const {
+        // Shifted coordinates
+        double x = p[0] - axonal_center[0];
+        double y = p[1] - axonal_center[1];
+        double z = p[2] - axonal_center[2];
+
+        // Normal vector to the ellipsoid at (x, y, z) (gradient of implicit equation)
+        Tensor<1,3> normal;
+        normal[0] = 2.0 * x / (a * a);
+        normal[1] = 2.0 * y / (b * b);
+        normal[2] = 2.0 * z / (c * c);
+
+        // Normalize the normal
+        if (normal.norm() > 0)
+            normal /= normal.norm();
+
+        // Test if the point is inside or on the ellipsoid
+        bool is_inside_ellipsoid = ( (x*x)/(a*a) + (y*y)/(b*b) + (z*z)/(c*c) ) <= 1.0 ;
+        if (!is_inside_ellipsoid) {
+            return normal;
+        } else {
+            // Compute a deterministic tangent vector orthogonal to the normal
+            // (cross product with a fixed vector, e.g., (0,0,1); if normal is parallel to (0,0,1), use (0,1,0) )
+            Tensor<1,3> ref;
+            if (std::abs(normal[2]) < 0.99){
+                ref[0] = 0.0; ref[1] = 0.0; ref[2] = 1.0;
+            }else{
+                ref[0] = 0.0; ref[1] = 1.0; ref[2] = 0.0;
+            }
+
+            // Tangent = cross(normal, ref)
+            Tensor<1,3> tangent;
+            tangent[0] = normal[1]*ref[2] - normal[2]*ref[1];
+            tangent[1] = normal[2]*ref[0] - normal[0]*ref[2];
+            tangent[2] = normal[0]*ref[1] - normal[1]*ref[0];
+
+            if (tangent.norm() > 0)
+                tangent /= tangent.norm();
+
+            return tangent;
+        }
+    }
   public:
-    FunctionD(const Point<dim> axonal_center_) : axonal_center{axonal_center_} 
-    {}
+    FunctionD(const Point<dim> axonal_center_) : axonal_center{axonal_center_}
+    {
+      n[0] = 0.0; n[1] = 0.0; n[2] = 1.0;
+      u[0] = 1.0; u[1] = 0.0; u[2] = 0.0;
+      v = cross_product_3d(n, u);
+      v /= v.norm();
+    }
 
     virtual void
     tensor_value(const Point<dim> &p, Tensor<2,dim> &retVal) const
@@ -89,7 +176,17 @@ public:
          identity[i][i] = 1;
       }
 
-      Tensor<1, dim> axonal_vector = get_axon_at(p);
+      Tensor<1, dim> axonal_vector;
+      if(override_radial_axon){
+          for (unsigned int i = 0; i < dim; i++)
+          {
+            axonal_vector[i] = p[i] - axonal_center[i];
+          }
+          if(axonal_vector.norm() > 0)
+              axonal_vector /= axonal_vector.norm();
+      }
+      else axonal_vector = get_axon_at(p);
+
       Tensor<2, dim> tensor_product = outer_product(axonal_vector, axonal_vector);
 
       // for (unsigned int i = 0; i < dim; ++i)
@@ -122,7 +219,11 @@ public:
     value(const Point<dim> &p,
           const unsigned int /*component*/ = 0) const override
     {
-      double x = p[0], y = p[1], z = p[2];
+      double x = p[0], y = p[1], z;
+      if(dim > 2)
+        z = p[2];
+      else
+        z = z0;
 
       return std::max(0.0, 0.3 - ((x-x0)*(x-x0) + (y-y0)*(y-y0) + (z-z0)*(z-z0)) / radius );
     }

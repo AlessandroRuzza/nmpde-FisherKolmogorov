@@ -263,7 +263,7 @@ NonLinearParabolic3D::output(const unsigned int &time_step) const
 
   data_out.build_patches();
 
-  data_out.write_vtu_with_pvtu_record("./", "output", time_step, MPI_COMM_WORLD, 3);
+  data_out.write_vtu_with_pvtu_record("./output/", "output", time_step, MPI_COMM_WORLD, 3);
 }
 
 void

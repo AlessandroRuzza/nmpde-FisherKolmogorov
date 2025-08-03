@@ -67,15 +67,15 @@ public:
   class FunctionD : public Function<dim>
   {
   private:  
-    static constexpr bool override_radial_axon = true;
+    static constexpr bool override_radial_axon = false;
     static constexpr double center_threshold = 10;
 
     const Point<dim> axonal_center;
 
     // Attributes
-    static constexpr double a = 5000; // Major axis
-    static constexpr double b = 3000; // Minor axis
-    static constexpr double c = 3000; // Z axis (for 3D)
+    static constexpr double a = 60; // Major axis
+    static constexpr double b = 30; // Minor axis
+    static constexpr double c = 30; // Z axis (for 3D)
     Tensor<1, 3, double> n; // Normal to plane
     Tensor<1, 3, double> u; // Major axis direction (in plane, unit)
     Tensor<1, 3> v;       // Minor axis direction (in plane, unit)
@@ -248,7 +248,9 @@ public:
     , deltat(deltat_)
     , outputPeriod(outputPeriod_)
     , mesh(MPI_COMM_WORLD)
-  {}
+  {
+    pcout << "MPI size = " << mpi_size << "\n";
+  }
 
   // Initialization.
   void

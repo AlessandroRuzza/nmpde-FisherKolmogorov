@@ -120,6 +120,7 @@ NonLinearParabolic3D::assemble_system()
 
   // Value of the solution at previous timestep (un) on current cell.
   std::vector<double> solution_old_loc(n_q);
+  std::vector<Tensor<1, dim>> solution_gradient_old_loc(n_q);
 
   for (const auto &cell : dof_handler.active_cell_iterators())
     {
@@ -134,6 +135,7 @@ NonLinearParabolic3D::assemble_system()
       fe_values.get_function_values(solution, solution_loc);
       fe_values.get_function_gradients(solution, solution_gradient_loc);
       fe_values.get_function_values(solution_old, solution_old_loc);
+      fe_values.get_function_gradients(solution_old, solution_gradient_old_loc);
 
       for (unsigned int q = 0; q < n_q; ++q)
         {
@@ -147,21 +149,21 @@ NonLinearParabolic3D::assemble_system()
             {
               for (unsigned int j = 0; j < dofs_per_cell; ++j)
                 {
-                  // Time-derivative term.
-                  cell_matrix(i, j) += fe_values.shape_value(i, q)
-                                       * fe_values.shape_value(j, q)
-                                       / deltat
-                                       * fe_values.JxW(q);
+                  // Time derivative term.
+                  cell_matrix(i, j) += fe_values.shape_value(i, q) 
+                                        * fe_values.shape_value(j, q)
+                                        / deltat
+                                        * fe_values.JxW(q);
 
-                  cell_matrix(i, j) += (d_loc * fe_values.shape_grad(j, q))
+                  cell_matrix(i, j) += 0.5*(d_loc * fe_values.shape_grad(j, q))
                                        * fe_values.shape_grad(i, q)
                                        * fe_values.JxW(q);
 
-                  cell_matrix(i, j) += -alpha_loc * fe_values.shape_value(j,q)
+                  cell_matrix(i, j) += -0.5*alpha_loc * fe_values.shape_value(j,q)
                                        * fe_values.shape_value(i,q)
                                        * fe_values.JxW(q);
 
-                  cell_matrix(i, j) += 2*alpha_loc * fe_values.shape_value(j,q)
+                  cell_matrix(i, j) += 0.5*2*alpha_loc * fe_values.shape_value(j,q)
                                          * solution_loc[q]
                                          * fe_values.shape_value(i,q)
                                          * fe_values.JxW(q);
@@ -175,15 +177,15 @@ NonLinearParabolic3D::assemble_system()
                                   * fe_values.shape_value(i, q)
                                   * fe_values.JxW(q);
 
-              cell_residual(i) -= (d_loc * solution_gradient_loc[q])
+              cell_residual(i) -= 0.5*(d_loc * solution_gradient_loc[q])
+                                  * fe_values.shape_grad(i, q)
+                                  * fe_values.JxW(q);
+              cell_residual(i) -= 0.5*(d_loc * solution_gradient_old_loc[q])
                                   * fe_values.shape_grad(i, q)
                                   * fe_values.JxW(q);
 
-              cell_residual(i) -= -alpha_loc * solution_loc[q]
-                                  * fe_values.shape_value(i,q)
-                                  * fe_values.JxW(q);
-
-              cell_residual(i) -= alpha_loc * solution_loc[q] * solution_loc[q]
+              cell_residual(i) -= -0.5 * (alpha_loc * solution_loc[q] * (1.0 - solution_loc[q]) + 
+                                         alpha_loc * solution_old_loc[q] * (1.0 - solution_old_loc[q]))
                                   * fe_values.shape_value(i,q)
                                   * fe_values.JxW(q);
             }
@@ -301,6 +303,24 @@ NonLinearParabolic3D::solve()
       // At every time step, we invoke Newton's method to solve the non-linear
       // problem.
       solve_newton();
+
+      double min = solution[0];
+      double max = solution[0];
+      for (unsigned int i = 1; i < solution.size(); ++i){
+        if(solution[i] < min)
+          min = solution[i];
+        if(solution[i] > max)
+          max = solution[i];
+      } 
+      // Print solution bounds
+      pcout << "Exact Solution bounds (before clamping): (" << min << "," << max << ")\n";
+      if(min < -0.01) pcout << "!!! Relatively large negative value detected!\n"; 
+
+      // Clamp solution in (0,1)
+      for (unsigned int i = 0; i < solution.size(); ++i){
+        double val = solution[i];
+        solution[i] = std::max(0.0, std::min(1.0, val));
+      }
 
       if(time_step % outputPeriod == 0)
         output(time_step/outputPeriod);

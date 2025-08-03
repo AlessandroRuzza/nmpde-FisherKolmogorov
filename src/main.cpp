@@ -11,8 +11,7 @@ main(int argc, char * argv[])
 {
 
   Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
-  const unsigned int mpi_rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
-  
+
   const unsigned int r = 1;
   const double T      = 30;
   const double deltat = 0.01;

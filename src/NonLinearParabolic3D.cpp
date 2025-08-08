@@ -40,7 +40,7 @@ NonLinearParabolic3D::setup()
     
     quadrature_boundary = std::make_unique<QGaussSimplex<dim - 1>>(r + 1);
     
-    std::cout << "  Quadrature points per boundary cell = " << quadrature_boundary->size() << std::endl;
+    pcout << "  Quadrature points per boundary cell = " << quadrature_boundary->size() << std::endl;
   }
 
   pcout << "-----------------------------------------------" << std::endl;
@@ -126,6 +126,8 @@ NonLinearParabolic3D::assemble_system()
     {
       if (!cell->is_locally_owned())
         continue;
+
+      // current_material_id = cell->material_id();  // Use this to differentiate White/Gray Matter
 
       fe_values.reinit(cell);
 
@@ -311,9 +313,14 @@ NonLinearParabolic3D::solve()
           min = solution[i];
         if(solution[i] > max)
           max = solution[i];
-      } 
+      }
+      
+      double global_min, global_max;
+      MPI_Allreduce(&min, &global_min, 1, MPI_DOUBLE, MPI_MIN, MPI_COMM_WORLD);
+      MPI_Allreduce(&max, &global_max, 1, MPI_DOUBLE, MPI_MAX, MPI_COMM_WORLD);
+
       // Print solution bounds
-      pcout << "Exact Solution bounds (before clamping): (" << min << "," << max << ")\n";
+      pcout << "Exact Solution bounds (before clamping): (" << global_min << "," << global_max << ")\n";
       if(min < -0.01) pcout << "!!! Relatively large negative value detected!\n"; 
 
       // Clamp solution in (0,1)

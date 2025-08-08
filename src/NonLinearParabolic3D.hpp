@@ -39,26 +39,22 @@ class NonLinearParabolic3D
 {
 public:
   // Physical dimension (1D, 2D, 3D)
-  static constexpr unsigned int dim = 2;
+  static constexpr unsigned int dim = 3;
   
-  static constexpr double dext = 6;
-  static constexpr double daxn = 20;
-  // static constexpr double k0 = 5;
-  // static constexpr double k1 = 5;
-  // static constexpr double k12 = 1;
-  // static constexpr double k_tilde1 = 3e-1;
+  static constexpr double dext = 1;
+  static constexpr double daxn = 30;
 
   static constexpr double alpha_coeff = 2;
 
   // Misfolded protein start sphere center and radius
-  // static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE
-  // static constexpr double radius = 20;
+  static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE
+  static constexpr double radius = 20;
 
-  // static constexpr double x0 = 0, y0 = 0, z0=0; // MNI_mesh
-  // static constexpr double radius = 20;
+  // static constexpr double x0 = -40, y0 = -18, z0=-10; // MNI_mesh
+  // static constexpr double radius = 15;
   
-  static constexpr double x0 = 230, y0 = 100, z0=0; // SAGITTAL
-  static constexpr double radius = 15;
+  // static constexpr double x0 = 230, y0 = 100, z0=0; // SAGITTAL
+  // static constexpr double radius = 15;
 
   // static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5; // CUBE
   // static constexpr double radius = 0.2;
@@ -73,9 +69,9 @@ public:
     const Point<dim> axonal_center;
 
     // Attributes
-    static constexpr double a = 60; // Major axis
+    static constexpr double a = 50; // Major axis
     static constexpr double b = 30; // Minor axis
-    static constexpr double c = 30; // Z axis (for 3D)
+    static constexpr double c = 20; // Z axis (for 3D)
     Tensor<1, 3, double> n; // Normal to plane
     Tensor<1, 3, double> u; // Major axis direction (in plane, unit)
     Tensor<1, 3> v;       // Minor axis direction (in plane, unit)
@@ -106,13 +102,13 @@ public:
             tangent /= norm;
 
         const bool is_inside_ellipse = ((x*x)/(a*a) + (y*y)/(b*b)) <= 1.0 ;
-        if (!is_inside_ellipse){ // Outside ellipse perimeter
+        if (!is_inside_ellipse){ // Outside ellipse perimeter, axon aligns with normal of ellipsoid surface
             Tensor<1,2> normal;
             normal[0] = -tangent[1];
             normal[1] = tangent[0];
             return normal;
         }
-        else  // Inside ellipse perimeter
+        else  // Inside ellipse perimeter, axon aligns with tangent of ellipsoid
             return tangent;
     }
     Tensor<1,3> get_axon_at(const dealii::Point<3> &p) const {

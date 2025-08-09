@@ -56,6 +56,20 @@ NonLinearParabolic3D::setup()
     DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
 
     pcout << "  Number of DoFs = " << dof_handler.n_dofs() << std::endl;
+
+    // Calculate axon vector field for visualization
+    axon_fe = std::make_unique<FESystem<dim>>(FE_SimplexP<dim>(r), dim);
+    axon_dof_handler.reinit(mesh);
+    axon_dof_handler.distribute_dofs(*axon_fe);
+    axonal_vector.reinit(axon_dof_handler.n_dofs());
+    
+    // Interpolate the axonal field robustly:
+    AxonTensorFunction axon_tensor_function(*this);
+    VectorTools::interpolate(
+        axon_dof_handler,
+        VectorFunctionFromTensorFunction<dim>(axon_tensor_function),
+        axonal_vector
+    );
   }
 
   pcout << "-----------------------------------------------" << std::endl;
@@ -254,7 +268,7 @@ NonLinearParabolic3D::solve_newton()
     }
 }
 
-void
+void 
 NonLinearParabolic3D::output(const unsigned int &time_step) const
 {
   DataOut<dim> data_out;
@@ -265,6 +279,15 @@ NonLinearParabolic3D::output(const unsigned int &time_step) const
   const Vector<double> partitioning(partition_int.begin(), partition_int.end());
   data_out.add_data_vector(partitioning, "partitioning");
 
+  // Output axon field on initial time step
+  if(time_step == 0){
+    std::vector<std::string> axon_names(dim, "axonal_vector");
+    std::vector<DataComponentInterpretation::DataComponentInterpretation> axon_interp(
+        dim, DataComponentInterpretation::component_is_part_of_vector);
+
+    data_out.add_data_vector(axon_dof_handler, axonal_vector, axon_names, axon_interp);
+  }
+  
   data_out.build_patches();
 
   data_out.write_vtu_with_pvtu_record("./output/", "output", time_step, MPI_COMM_WORLD, 3);
@@ -280,6 +303,7 @@ NonLinearParabolic3D::solve()
   // Apply the initial condition.
   {
     pcout << "Applying the initial condition" << std::endl;
+    pcout << "Note: axonal_vector field will be written only at the first time step (time_step=0)." << std::endl;
 
     VectorTools::interpolate(dof_handler, c_0, solution_owned);
     solution = solution_owned;

@@ -13,7 +13,7 @@ main(int argc, char * argv[])
   Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
 
   const unsigned int r = 1;
-  const double T      = 20;
+  const double T      = 25;
   const double deltat = 0.05;
 
   std::string mesh = "../mesh/brain_coarse.msh";
@@ -31,6 +31,8 @@ main(int argc, char * argv[])
   // std::string mesh = "../mesh/sagittal_mesh.msh";
   // const Point<2> axonal_center = {190.0, 140.0};
   
+  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
+    std::cout << "Note: axonal_vector field will be written only at the first time step (time_step=0), to save disk space." << std::endl;
   
   NonLinearParabolic3D problem(mesh, axonal_center, r, T, deltat, 5);
 

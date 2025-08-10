@@ -61,8 +61,8 @@ def main():
 
         # Add $PhysicalNames section
         msh.write("$PhysicalNames\n2\n")
-        msh.write("2 0 \"White matter\"\n")
-        msh.write("2 1 \"Grey matter\"\n")
+        msh.write("2 0 \"White_matter\"\n")
+        msh.write("2 1 \"Grey_matter\"\n")
         msh.write("$EndPhysicalNames\n")
 
         msh.write(f"$Nodes\n{len(nodes)}\n")

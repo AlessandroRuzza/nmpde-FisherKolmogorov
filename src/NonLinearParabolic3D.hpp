@@ -44,7 +44,9 @@ public:
   static constexpr double dext = 1;
   static constexpr double daxn = 30;
 
-  static constexpr double alpha_coeff = 2;
+  static constexpr double alpha_coeff_white = 1.2;
+  static constexpr double alpha_coeff_gray = 0.6;
+  static constexpr double alpha_coeff = 1; // For compatibility with previous versions
 
   // Misfolded protein start sphere center and radius
   static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE
@@ -199,11 +201,13 @@ public:
   {
   public:
     virtual double
-    value(const Point<dim> &/*p*/,
-          const unsigned int /*component*/ = 0) const override
+    value(const char matter,
+          const Point<dim> &/*p*/,
+          const unsigned int /*component*/ = 0) //cannot override
     {
-      // return k12 * k0/k1 - k_tilde1;
-      return alpha_coeff;
+      if (matter == 'w') return alpha_coeff_white;
+      else if (matter == 'g') return alpha_coeff_gray;
+      else return alpha_coeff; // Default case, for compatibility
     }
   };
 

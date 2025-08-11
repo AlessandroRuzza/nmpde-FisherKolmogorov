@@ -83,6 +83,14 @@ NonLinearParabolic3D::setup()
     solution.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
     solution_old = solution;
   }
+
+  unsigned int n_wm = 0, n_gm = 0;
+  for (const auto &cell : mesh.active_cell_iterators())
+    if (cell->is_locally_owned())
+      if (cell->material_id() == 1) ++n_wm;
+      else if (cell->material_id() == 2) ++n_gm;
+
+  pcout << "WM cells: " << n_wm << "  GM cells: " << n_gm << std::endl;
 }
 
 void
@@ -145,7 +153,9 @@ NonLinearParabolic3D::assemble_system()
           Tensor<2,dim> d_loc;
           d.tensor_value(fe_values.quadrature_point(q), d_loc);
 
-          const double alpha_loc = alpha.value(fe_values.quadrature_point(q));
+
+          const types::material_id mid = cell->material_id();
+          const double alpha_loc = alpha.value(mid==1 ? 'w' : 'g', fe_values.quadrature_point(q));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {

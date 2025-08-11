@@ -28,6 +28,11 @@
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/vector_tools.h>
 
+
+#include <deal.II/base/data_out_base.h>   // DataOutBase::DataOutFilter, XDMFEntry
+#include <deal.II/numerics/data_out.h>
+#include <deal.II/base/utilities.h>
+
 #include <fstream>
 #include <iostream>
 #include <algorithm>

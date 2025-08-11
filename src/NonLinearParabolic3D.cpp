@@ -264,21 +264,65 @@ NonLinearParabolic3D::solve_newton()
     }
 }
 
-void
-NonLinearParabolic3D::output(const unsigned int &time_step) const
+
+
+
+
+
+
+
+void NonLinearParabolic3D::output(const unsigned int &time_step, const double time) const
 {
   DataOut<dim> data_out;
-  data_out.add_data_vector(dof_handler, solution, "u");
 
-  std::vector<unsigned int> partition_int(mesh.n_active_cells());
-  GridTools::get_subdomain_association(mesh, partition_int);
-  const Vector<double> partitioning(partition_int.begin(), partition_int.end());
-  data_out.add_data_vector(partitioning, "partitioning");
+  // scrivi la soluzione come float per ridurre i MB
+  Vector<float> solution_f(solution.size());
+  for (unsigned int i = 0; i < solution.size(); ++i)
+    solution_f[i] = static_cast<float>(solution[i]);
+
+  data_out.add_data_vector(dof_handler, solution_f, "u");
+
+  // se vuoi riaggiungere la partizione, fallo come CELL DATA in float
+  // Vector<float> part(mesh.n_active_cells());
+  // { std::vector<unsigned int> tmp(mesh.n_active_cells());
+  //   GridTools::get_subdomain_association(mesh, tmp);
+  //   for (unsigned int i=0;i<tmp.size();++i) part[i] = static_cast<float>(tmp[i]); }
+  // data_out.add_data_vector(part, "part");
 
   data_out.build_patches();
 
-  data_out.write_vtu_with_pvtu_record("./output/", "output", time_step, MPI_COMM_WORLD, 3);
+  const std::string dir  = "./output/";
+  const std::string base = "output";
+  const std::string h5_mesh = dir + base + "_mesh.h5";
+  const std::string h5_sol  = dir + base + "_" + Utilities::int_to_string(time_step, 4) + ".h5";
+
+#ifdef DEAL_II_WITH_HDF5
+  try
+  {
+    dealii::DataOutBase::DataOutFilter filter; // 9.3.1: nessun flag speciale
+    const bool write_mesh_file = (time_step == 0);
+    data_out.write_hdf5_parallel(filter, write_mesh_file, h5_mesh, h5_sol, MPI_COMM_WORLD);
+
+    // opzionale XDMF (solo se vuoi ParaView su HDF5)
+    // const auto entry = data_out.create_xdmf_entry(filter, h5_mesh, h5_sol, time, MPI_COMM_WORLD);
+    // std::vector<dealii::XDMFEntry> entries{entry};
+    // data_out.write_xdmf_file(entries, dir + base + ".xdmf", MPI_COMM_WORLD);
+    return;
+  }
+  catch (const std::exception &e)
+  {
+    std::cerr << "[HDF5 fallback] " << e.what() << "\n";
+  }
 }
+
+
+
+
+
+
+
+
+
 
 void
 NonLinearParabolic3D::solve()

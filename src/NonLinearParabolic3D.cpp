@@ -75,14 +75,14 @@ NonLinearParabolic3D::setup()
     // Calculate white/gray matter distribution for visualization
     std::vector<unsigned int> material_id_vec;
     for (const auto &cell : dof_handler.active_cell_iterators())
-      if (cell->is_locally_owned())
+      if (cell->is_locally_owned() || cell->is_ghost())
         material_id_vec.push_back(cell->material_id());
 
     material_ids.reinit(material_id_vec.size());
     for (unsigned int i = 0; i < material_id_vec.size(); ++i)
       material_ids[i] = material_id_vec[i];
 
-  }
+    }
 
   pcout << "-----------------------------------------------" << std::endl;
 
@@ -169,8 +169,7 @@ NonLinearParabolic3D::assemble_system()
           Tensor<2,dim> d_loc;
           d.tensor_value(fe_values.quadrature_point(q), d_loc);
 
-          const char mid_letter = material_names.at(cell->material_id())[0];
-          const double alpha_loc = alpha.value(mid_letter, fe_values.quadrature_point(q));
+          const double alpha_loc = alpha.value(cell->material_id(), fe_values.quadrature_point(q));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -304,11 +303,6 @@ NonLinearParabolic3D::output(const unsigned int &time_step) const
 
   data_out.write_vtu_with_pvtu_record("./output/", "output", time_step, MPI_COMM_WORLD, 3);
 }
-
-
-
-
-
 
 void
 NonLinearParabolic3D::solve()

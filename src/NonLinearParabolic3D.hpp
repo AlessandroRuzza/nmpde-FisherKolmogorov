@@ -41,24 +41,35 @@
 
 using namespace dealii;
 
+template<unsigned int dim>
+struct MeshData{
+public:
+  const std::string mesh_file_name;
+  const double dext;
+  const double daxn;
+  
+  const double alpha_coeff_white;
+  const double alpha_coeff_gray;
+
+  const std::map<unsigned int, std::string> material_names;
+
+  // Initial condition center coords
+  const double x0, y0, z0, radius; 
+
+  const double center_threshold = 10;
+  const Point<dim> axonal_center;
+  const double a; // X axis
+  const double b; // Y axis
+  const double c; // Z axis (for 3D)
+};
+
 // Class representing the non-linear diffusion problem.
 class NonLinearParabolic3D
 {
-public:
+  public:
   // Physical dimension (1D, 2D, 3D)
   static constexpr unsigned int dim = 2;
-  
-  static constexpr double dext = 3;
-  static constexpr double daxn = 50;
-
-  static constexpr double alpha_coeff_white = 1.2;
-  static constexpr double alpha_coeff_gray = 0.6;
-  static constexpr double alpha_coeff = 1; // For compatibility with previous versions
-
-  const std::map<unsigned int, std::string> material_names = {
-    {0, "grey matter"},
-    {1, "white matter"}
-  };
+  using Mesh = MeshData<dim>;
 
   // Misfolded protein start sphere center and radius
   // static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE & Ernie
@@ -66,33 +77,21 @@ public:
 
   // static constexpr double x0 = -40, y0 = -18, z0=-10; // MNI_mesh
   // static constexpr double radius = 15;
-  
-  static constexpr double x0 = 230, y0 = 100, z0=0; // SAGITTAL
-  static constexpr double radius = 15;
-
-  // static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5; // CUBE
-  // static constexpr double radius = 0.2;
 
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>
   {
   private:  
     static constexpr bool override_radial_axon = false;
-    static constexpr double center_threshold = 10;
 
-    const Point<dim> axonal_center;
-
-    // Attributes
-    static constexpr double a = 60; // X axis
-    static constexpr double b = 40; // Y axis
-    static constexpr double c = 35; // Z axis (for 3D)
-  
+    const Mesh mesh; 
+    const double a,b,c;
   public:
     Tensor<1,2> get_axon_at(const Point<2> &p) const {
         Tensor<1,2> normal;
         // Shifted coordinates
-        double x = p[0] - axonal_center[0];
-        double y = p[1] - axonal_center[1];
+        double x = p[0] - mesh.axonal_center[0];
+        double y = p[1] - mesh.axonal_center[1];
 
         normal[0] = x / (a*a);
         normal[1] = y / (b*b);
@@ -111,11 +110,11 @@ public:
             return tangent;
         }
     }
-    Tensor<1,3> get_axon_at(const dealii::Point<3> &p) const {
+    Tensor<1,3> get_axon_at(const Point<3> &p) const {
         // Shifted coordinates
-        double x = p[0] - axonal_center[0];
-        double y = p[1] - axonal_center[1];
-        double z = p[2] - axonal_center[2];
+        double x = p[0] - mesh.axonal_center[0];
+        double y = p[1] - mesh.axonal_center[1];
+        double z = p[2] - mesh.axonal_center[2];
 
         // Normal vector to the ellipsoid at (x, y, z) (gradient of implicit equation)
         Tensor<1,3> normal;
@@ -154,7 +153,7 @@ public:
         }
     }
 
-    FunctionD(const Point<dim> axonal_center_) : axonal_center{axonal_center_}
+    FunctionD(const Mesh& mesh_) : mesh{mesh_}, a{mesh_.a}, b{mesh_.b}, c{mesh_.c}
     {}
 
     virtual void
@@ -165,9 +164,9 @@ public:
 
       Tensor<1, dim> dist_center;
       for (unsigned int i = 0; i < dim; i++)
-        dist_center[i] = p[i] - axonal_center[i];
+        dist_center[i] = p[i] - mesh.axonal_center[i];
 
-      if(dist_center.norm() < center_threshold) // If too close to the axonal_center, use isotropic diffusion
+      if(dist_center.norm() < mesh.center_threshold) // If too close to the axonal_center, use isotropic diffusion
           axonal_vector.clear(); // set to zero
       else{
           if(override_radial_axon)
@@ -178,29 +177,39 @@ public:
 
       Tensor<2, dim> tensor_product = outer_product(axonal_vector, axonal_vector);
 
-      retVal = dext*identity + daxn*tensor_product;
+      retVal = mesh.dext*identity + mesh.daxn*tensor_product;
     }
   };
 
   // Function for the reaction coefficient.
   class FunctionReaction : public Function<dim>
   {
+    const Mesh mesh;
+
   public:
+    FunctionReaction(const Mesh& mesh_) : mesh(mesh_)
+    {}
+
     virtual double
-    value(const char matter,
+    value(const unsigned int material_id,
           const Point<dim> &/*p*/,
           const unsigned int /*component*/ = 0) //cannot override
     {
-      if (matter == 'w') return alpha_coeff_white;
-      else if (matter == 'g') return alpha_coeff_gray;
-      else return alpha_coeff; // Default case, for compatibility
+      const char matter = mesh.material_names.at(material_id)[0];
+      if (matter == 'g') return mesh.alpha_coeff_gray;
+      else return mesh.alpha_coeff_white;
     }
   };
 
   // Function for initial conditions.
   class FunctionC0 : public Function<dim>
   {
+    const double x0,y0,z0;
+    const double radius;
   public:
+    FunctionC0(const Mesh& mesh_) : x0{mesh_.x0}, y0{mesh_.y0}, z0{mesh_.z0}, radius(mesh_.radius)
+    {}
+    
     virtual double
     value(const Point<dim> &p,
           const unsigned int /*component*/ = 0) const override
@@ -217,8 +226,7 @@ public:
   
   // Constructor. We provide the final time, time step Delta t and theta method
   // parameter as constructor arguments.
-  NonLinearParabolic3D(const std::string  &mesh_file_name_, 
-                const Point<dim> mesh_center_,
+  NonLinearParabolic3D(const Mesh &mesh_, 
                 const unsigned int &r_,
                 const double       &T_,
                 const double       &deltat_,
@@ -226,10 +234,11 @@ public:
     : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
     , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
     , pcout(std::cout, mpi_rank == 0)
-    , d(mesh_center_)
+    , d(mesh_)
+    , alpha(mesh_)
+    , c_0(mesh_)
     , T(T_)
-    , mesh_file_name(mesh_file_name_)
-    , axonal_center(mesh_center_)
+    , mesh_file_name(mesh_.mesh_file_name)
     , r(r_)
     , deltat(deltat_)
     , outputPeriod(outputPeriod_)
@@ -263,9 +272,6 @@ protected:
   void
   output(const unsigned int &time_step) const;
 
-
-  void output(const unsigned int &time_step, const double time) const;
-
   // MPI parallel. /////////////////////////////////////////////////////////////
 
   // Number of MPI processes.
@@ -281,7 +287,7 @@ protected:
 
   // mu_0 coefficient.
   FunctionD d;
-  
+
   FunctionReaction alpha;
 
   // Initial conditions.
@@ -297,7 +303,6 @@ protected:
 
   // Mesh file name.
   const std::string mesh_file_name;
-  const Point<dim> axonal_center;
 
   // Polynomial degree.
   const unsigned int r;

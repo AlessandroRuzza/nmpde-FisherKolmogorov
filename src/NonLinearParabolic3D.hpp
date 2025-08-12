@@ -46,7 +46,7 @@ class NonLinearParabolic3D
 {
 public:
   // Physical dimension (1D, 2D, 3D)
-  static constexpr unsigned int dim = 3;
+  static constexpr unsigned int dim = 2;
   
   static constexpr double dext = 3;
   static constexpr double daxn = 50;
@@ -55,15 +55,20 @@ public:
   static constexpr double alpha_coeff_gray = 0.6;
   static constexpr double alpha_coeff = 1; // For compatibility with previous versions
 
+  const std::map<unsigned int, std::string> material_names = {
+    {0, "grey matter"},
+    {1, "white matter"}
+  };
+
   // Misfolded protein start sphere center and radius
-  static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE
-  static constexpr double radius = 20;
+  // static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE & Ernie
+  // static constexpr double radius = 20;
 
   // static constexpr double x0 = -40, y0 = -18, z0=-10; // MNI_mesh
   // static constexpr double radius = 15;
   
-  // static constexpr double x0 = 230, y0 = 100, z0=0; // SAGITTAL
-  // static constexpr double radius = 15;
+  static constexpr double x0 = 230, y0 = 100, z0=0; // SAGITTAL
+  static constexpr double radius = 15;
 
   // static constexpr double x0 = 0.5, y0 = 0.5, z0=0.5; // CUBE
   // static constexpr double radius = 0.2;
@@ -79,8 +84,8 @@ public:
 
     // Attributes
     static constexpr double a = 60; // X axis
-    static constexpr double b = 80; // Y axis
-    static constexpr double c = 45; // Z axis (for 3D)
+    static constexpr double b = 40; // Y axis
+    static constexpr double c = 35; // Z axis (for 3D)
   
   public:
     Tensor<1,2> get_axon_at(const Point<2> &p) const {
@@ -340,6 +345,9 @@ protected:
   // System solution at previous time step.
   TrilinosWrappers::MPI::Vector solution_old;
   
+  // White/Gray matter visualization
+  Vector<double> material_ids;
+
   // Axon visualization 
   std::unique_ptr<FESystem<dim>> axon_fe;
   DoFHandler<dim> axon_dof_handler;

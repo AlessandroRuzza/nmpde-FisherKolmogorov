@@ -28,11 +28,11 @@ main(int argc, char * argv[])
   // std::string mesh = "../mesh/MNI_mesh_ARuzza.msh";
   // const Point<3> axonal_center = {0, 0, 40};
   
-  // std::string mesh = "../mesh/sagittal_mesh.msh";
-  // const Point<2> axonal_center = {190.0, 140.0};
+  std::string mesh = "../mesh/sagittal_mesh.msh";
+  const Point<2> axonal_center = {190.0, 140.0};
   
-  std::string mesh = "../mesh/ernie_brain_dealii.msh";
-  const Point<3> axonal_center = {0.0, 0.0, 0.0};
+  // std::string mesh = "../mesh/ernie_brain_dealii.msh";
+  // const Point<3> axonal_center = {0.0, 0.0, 0.0};
   
   if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0){
     std::cout << "Note: axonal_vector field will be written only at the first time step (time_step=0), to save disk space." << std::endl;

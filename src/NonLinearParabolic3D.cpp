@@ -64,13 +64,24 @@ NonLinearParabolic3D::setup()
     axon_dof_handler.distribute_dofs(*axon_fe);
     axonal_vector.reinit(axon_dof_handler.n_dofs());
     
-    // Interpolate the axonal field robustly:
+    // Interpolate the axonal field
     AxonTensorFunction axon_tensor_function(*this);
     VectorTools::interpolate(
         axon_dof_handler,
         VectorFunctionFromTensorFunction<dim>(axon_tensor_function),
         axonal_vector
     );
+
+    // Calculate white/gray matter distribution for visualization
+    std::vector<unsigned int> material_id_vec;
+    for (const auto &cell : dof_handler.active_cell_iterators())
+      if (cell->is_locally_owned())
+        material_id_vec.push_back(cell->material_id());
+
+    material_ids.reinit(material_id_vec.size());
+    for (unsigned int i = 0; i < material_id_vec.size(); ++i)
+      material_ids[i] = material_id_vec[i];
+
   }
 
   pcout << "-----------------------------------------------" << std::endl;
@@ -142,7 +153,6 @@ NonLinearParabolic3D::assemble_system()
       if (!cell->is_locally_owned())
         continue;
 
-
       fe_values.reinit(cell);
 
       cell_matrix   = 0.0;
@@ -159,10 +169,8 @@ NonLinearParabolic3D::assemble_system()
           Tensor<2,dim> d_loc;
           d.tensor_value(fe_values.quadrature_point(q), d_loc);
 
-          const types::material_id mid = cell->material_id();
-          const double alpha_loc = alpha.value(mid==1 ? 'w' : 'g', fe_values.quadrature_point(q));
-
-
+          const char mid_letter = material_names.at(cell->material_id())[0];
+          const double alpha_loc = alpha.value(mid_letter, fe_values.quadrature_point(q));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -282,13 +290,14 @@ NonLinearParabolic3D::output(const unsigned int &time_step) const
   const Vector<double> partitioning(partition_int.begin(), partition_int.end());
   data_out.add_data_vector(partitioning, "partitioning");
 
-  // Output axon field on initial time step
+  // Output axon field and white/gray matter distribution on initial time step
   if(time_step == 0){
     std::vector<std::string> axon_names(dim, "axonal_vector");
     std::vector<DataComponentInterpretation::DataComponentInterpretation> axon_interp(
         dim, DataComponentInterpretation::component_is_part_of_vector);
 
     data_out.add_data_vector(axon_dof_handler, axonal_vector, axon_names, axon_interp);
+    data_out.add_data_vector(material_ids, "material_id", DataOut<dim>::type_cell_data);
   }
   
   data_out.build_patches();

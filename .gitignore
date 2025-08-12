@@ -37,6 +37,8 @@
 build
 cmake-build-debug
 .idea
-mesh
+mesh/*.msh
+mesh/*/*.msh
+mesh/*/*/*.msh
 building-mesh
 

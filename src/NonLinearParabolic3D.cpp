@@ -56,6 +56,20 @@ NonLinearParabolic3D::setup()
     DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
 
     pcout << "  Number of DoFs = " << dof_handler.n_dofs() << std::endl;
+
+    // Calculate axon vector field for visualization
+    axon_fe = std::make_unique<FESystem<dim>>(FE_SimplexP<dim>(r), dim);
+    axon_dof_handler.reinit(mesh);
+    axon_dof_handler.distribute_dofs(*axon_fe);
+    axonal_vector.reinit(axon_dof_handler.n_dofs());
+    
+    // Interpolate the axonal field robustly:
+    AxonTensorFunction axon_tensor_function(*this);
+    VectorTools::interpolate(
+        axon_dof_handler,
+        VectorFunctionFromTensorFunction<dim>(axon_tensor_function),
+        axonal_vector
+    );
   }
 
   pcout << "-----------------------------------------------" << std::endl;
@@ -83,14 +97,6 @@ NonLinearParabolic3D::setup()
     solution.reinit(locally_owned_dofs, locally_relevant_dofs, MPI_COMM_WORLD);
     solution_old = solution;
   }
-
-  unsigned int n_wm = 0, n_gm = 0;
-  for (const auto &cell : mesh.active_cell_iterators())
-    if (cell->is_locally_owned())
-      if (cell->material_id() == 1) ++n_wm;
-      else if (cell->material_id() == 2) ++n_gm;
-
-  pcout << "WM cells: " << n_wm << "  GM cells: " << n_gm << std::endl;
 }
 
 void
@@ -153,9 +159,10 @@ NonLinearParabolic3D::assemble_system()
           Tensor<2,dim> d_loc;
           d.tensor_value(fe_values.quadrature_point(q), d_loc);
 
-
           const types::material_id mid = cell->material_id();
           const double alpha_loc = alpha.value(mid==1 ? 'w' : 'g', fe_values.quadrature_point(q));
+
+
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {
@@ -264,6 +271,30 @@ NonLinearParabolic3D::solve_newton()
     }
 }
 
+void 
+NonLinearParabolic3D::output(const unsigned int &time_step) const
+{
+  DataOut<dim> data_out;
+  data_out.add_data_vector(dof_handler, solution, "u");
+
+  std::vector<unsigned int> partition_int(mesh.n_active_cells());
+  GridTools::get_subdomain_association(mesh, partition_int);
+  const Vector<double> partitioning(partition_int.begin(), partition_int.end());
+  data_out.add_data_vector(partitioning, "partitioning");
+
+  // Output axon field on initial time step
+  if(time_step == 0){
+    std::vector<std::string> axon_names(dim, "axonal_vector");
+    std::vector<DataComponentInterpretation::DataComponentInterpretation> axon_interp(
+        dim, DataComponentInterpretation::component_is_part_of_vector);
+
+    data_out.add_data_vector(axon_dof_handler, axonal_vector, axon_names, axon_interp);
+  }
+  
+  data_out.build_patches();
+
+  data_out.write_vtu_with_pvtu_record("./output/", "output", time_step, MPI_COMM_WORLD, 3);
+}
 
 
 
@@ -321,9 +352,6 @@ void NonLinearParabolic3D::output(const unsigned int &time_step, const double ti
 
 
 
-
-
-
 void
 NonLinearParabolic3D::solve()
 {
@@ -334,6 +362,7 @@ NonLinearParabolic3D::solve()
   // Apply the initial condition.
   {
     pcout << "Applying the initial condition" << std::endl;
+    pcout << "Note: axonal_vector field will be written only at the first time step (time_step=0)." << std::endl;
 
     VectorTools::interpolate(dof_handler, c_0, solution_owned);
     solution = solution_owned;
@@ -392,4 +421,5 @@ NonLinearParabolic3D::solve()
 
       pcout << std::endl;
     }
+>>>>>>> b3a0d20d49b87a79cfc4d7a157efd396a079954a
 }

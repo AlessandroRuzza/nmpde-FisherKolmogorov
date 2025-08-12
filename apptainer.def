@@ -6,21 +6,75 @@ From: ubuntu:22.04
 
 %post
     set -e
-    # Install build tools
-    apt-get update && apt-get install -y \
-        git \
+    # Install build tools and dependencies for deal.II
+    apt-get update && apt-get install -y --no-install-recommends \
         cmake \
         build-essential \
-        && rm -rf /var/lib/apt/lists/*
-    # Prepare build directory
-    mkdir -p /opt/app/build
-    # Copy source and build
-    cd /opt/app/build
+        g++ \
+        ninja-build \
+        python3 \
+        python3-pip \
+        libopenmpi-dev \
+        libblas-dev \
+        liblapack-dev \
+        libboost-all-dev \
+        libhdf5-dev \
+        zlib1g-dev \
+        libmuparser-dev \
+        libp4est-dev \
+        libtrilinos-zoltan-dev \
+        libdeal.ii-dev
+
+    rm -rf /var/lib/apt/lists/*
+
+    # Build deal.II 9.5.1 from source
+    # cd /tmp
+    # git clone --depth 1 --branch v9.5.1 https://github.com/dealii/dealii.git
+    # cd dealii
+    # mkdir build && cd build
+    # cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ../
+    # make -j$(nproc)
+    # make install
+    # cd /tmp
+    # rm -rf dealii
+
+    # Build project
+    cd /opt/app
+    rm -rf build
+    mkdir -p build
+    cd build
     cmake ..
     make
 
-%files
-    . /opt/app
+    # (Opt.) Remove build dependencies to reduce image size
+    apt-get purge -y \
+        cmake \
+        build-essential \
+        g++ \
+        ninja-build 
+    apt-get clean
+    rm -rf /var/lib/apt/lists/* 
+
+    # Delete unnecessary files (all other than exe and mesh folder)
+    cd /opt/app/
+    mkdir -p /tmp/runtime
+    cp ./build/main /tmp/runtime/
+    cp -r ./mesh /tmp/runtime/
+    rm -rf ./*
+    cp -r /tmp/runtime/* .
+    mkdir -p build
+    mv ./main ./build
+    rm -rf /tmp/runtime
+
+%files 
+    ./ /opt/app/
 
 %runscript
-    exec /opt/app/build/main
+    cd /opt/app/build
+    mkdir -p /tmp/build
+    cp ./main /tmp/build
+    cp -r ../mesh /tmp 
+    cd /tmp/build
+    exec ./main
+
+

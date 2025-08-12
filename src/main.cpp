@@ -34,9 +34,13 @@ main(int argc, char * argv[])
   std::string mesh = "../mesh/ernie_brain_dealii.msh";
   const Point<3> axonal_center = {0.0, 0.0, 0.0};
   
-  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0)
+  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0){
     std::cout << "Note: axonal_vector field will be written only at the first time step (time_step=0), to save disk space." << std::endl;
-  
+    #ifdef DEAL_II_WITH_HDF5
+      std::cout << "Using HDF5 output." << std::endl;
+    #endif
+  }
+
   NonLinearParabolic3D problem(mesh, axonal_center, r, T, deltat, 5);
 
   problem.setup();

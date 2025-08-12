@@ -16,10 +16,12 @@ message(STATUS "Using deal.II ${DEAL_II_VERSION} (HDF5=${DEAL_II_WITH_HDF5}, MPI
 
 include(cmake-common.cmake)
 
-#Only thing to be changed acros s different files
 add_executable(main src/main.cpp src/NonLinearParabolic3D.cpp)
-
 deal_ii_setup_target(main)
+
+add_executable(hdf5 src/main.cpp src/NonLinearParabolic3D.cpp)
+target_compile_definitions(hdf5 PRIVATE DEAL_II_WITH_HDF5)
+deal_ii_setup_target(hdf5)
 
 add_custom_target(remove_vtu_files
         COMMAND ${CMAKE_COMMAND} -E remove
@@ -51,3 +53,4 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
 )
 
 add_dependencies(main remove_vtu_files create_output_dir)
+add_dependencies(hdf5 remove_vtu_files create_output_dir)

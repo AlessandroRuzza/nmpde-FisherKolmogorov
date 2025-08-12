@@ -41,4 +41,5 @@ mesh/*.msh
 mesh/*/*.msh
 mesh/*/*/*.msh
 building-mesh
-
+*.sif
+*.sbatch

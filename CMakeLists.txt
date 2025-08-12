@@ -1,27 +1,12 @@
 cmake_minimum_required(VERSION 3.12.0)
-
 project(exam LANGUAGES CXX C)
-
-# Trova ESATTAMENTE deal.II 9.6 via CMake config (niente path fissi)
-find_package(deal.II 9.6 EXACT CONFIG REQUIRED)
-
-# Garanzie: HDF5 deve essere ON
-if(NOT DEAL_II_WITH_HDF5)
-  message(FATAL_ERROR "Found deal.II ${DEAL_II_VERSION} but HDF5 is OFF. Load a deal.II built with HDF5.")
-endif()
-
-message(STATUS "Using deal.II ${DEAL_II_VERSION} (HDF5=${DEAL_II_WITH_HDF5}, MPI=${DEAL_II_WITH_MPI})")
-
-
 
 include(cmake-common.cmake)
 
+#Only thing to be changed acros s different files
 add_executable(main src/main.cpp src/NonLinearParabolic3D.cpp)
-deal_ii_setup_target(main)
 
-add_executable(hdf5 src/main.cpp src/NonLinearParabolic3D.cpp)
-target_compile_definitions(hdf5 PRIVATE DEAL_II_WITH_HDF5)
-deal_ii_setup_target(hdf5)
+deal_ii_setup_target(main)
 
 add_custom_target(remove_vtu_files
         COMMAND ${CMAKE_COMMAND} -E remove
@@ -53,4 +38,3 @@ set_property(DIRECTORY APPEND PROPERTY ADDITIONAL_MAKE_CLEAN_FILES
 )
 
 add_dependencies(main remove_vtu_files create_output_dir)
-add_dependencies(hdf5 remove_vtu_files create_output_dir)

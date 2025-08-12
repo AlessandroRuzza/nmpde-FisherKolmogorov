@@ -1,3 +1,4 @@
+
 #include "NonLinearParabolic3D.hpp"
 
 void
@@ -141,7 +142,6 @@ NonLinearParabolic3D::assemble_system()
       if (!cell->is_locally_owned())
         continue;
 
-      // current_material_id = cell->material_id();  // Use this to differentiate White/Gray Matter
 
       fe_values.reinit(cell);
 
@@ -301,57 +301,6 @@ NonLinearParabolic3D::output(const unsigned int &time_step) const
 
 
 
-
-void NonLinearParabolic3D::output(const unsigned int &time_step, const double time) const
-{
-  DataOut<dim> data_out;
-
-  // scrivi la soluzione come float per ridurre i MB
-  Vector<float> solution_f(solution.size());
-  for (unsigned int i = 0; i < solution.size(); ++i)
-    solution_f[i] = static_cast<float>(solution[i]);
-
-  data_out.add_data_vector(dof_handler, solution_f, "u");
-
-  // se vuoi riaggiungere la partizione, fallo come CELL DATA in float
-  // Vector<float> part(mesh.n_active_cells());
-  // { std::vector<unsigned int> tmp(mesh.n_active_cells());
-  //   GridTools::get_subdomain_association(mesh, tmp);
-  //   for (unsigned int i=0;i<tmp.size();++i) part[i] = static_cast<float>(tmp[i]); }
-  // data_out.add_data_vector(part, "part");
-
-  data_out.build_patches();
-
-  const std::string dir  = "./output/";
-  const std::string base = "output";
-  const std::string h5_mesh = dir + base + "_mesh.h5";
-  const std::string h5_sol  = dir + base + "_" + Utilities::int_to_string(time_step, 4) + ".h5";
-
-#ifdef DEAL_II_WITH_HDF5
-  try
-  {
-    dealii::DataOutBase::DataOutFilter filter; // 9.3.1: nessun flag speciale
-    const bool write_mesh_file = (time_step == 0);
-    data_out.write_hdf5_parallel(filter, write_mesh_file, h5_mesh, h5_sol, MPI_COMM_WORLD);
-
-    // opzionale XDMF (solo se vuoi ParaView su HDF5)
-    // const auto entry = data_out.create_xdmf_entry(filter, h5_mesh, h5_sol, time, MPI_COMM_WORLD);
-    // std::vector<dealii::XDMFEntry> entries{entry};
-    // data_out.write_xdmf_file(entries, dir + base + ".xdmf", MPI_COMM_WORLD);
-    return;
-  }
-  catch (const std::exception &e)
-  {
-    std::cerr << "[HDF5 fallback] " << e.what() << "\n";
-  }
-}
-
-
-
-
-
-
-
 void
 NonLinearParabolic3D::solve()
 {
@@ -413,7 +362,7 @@ NonLinearParabolic3D::solve()
       }
 
       if(time_step % outputPeriod == 0)
-        output(time_step/outputPeriod);
+          output(time_step);
 
       // Uncomment to always output last time step.
       // else if(time > T) 
@@ -421,5 +370,4 @@ NonLinearParabolic3D::solve()
 
       pcout << std::endl;
     }
->>>>>>> b3a0d20d49b87a79cfc4d7a157efd396a079954a
 }

@@ -258,6 +258,9 @@ protected:
   void
   output(const unsigned int &time_step) const;
 
+
+  void output(const unsigned int &time_step, const double time) const;
+
   // MPI parallel. /////////////////////////////////////////////////////////////
 
   // Number of MPI processes.

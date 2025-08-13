@@ -56,7 +56,7 @@ public:
   // Initial condition center coords
   const double x0, y0, z0, radius; 
 
-  const double center_threshold = 10;
+  const double center_threshold;
   const Point<dim> axonal_center;
   const double a; // X axis
   const double b; // Y axis

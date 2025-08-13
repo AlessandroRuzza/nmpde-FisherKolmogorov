@@ -1,82 +1,115 @@
 #include "NonLinearParabolic3D.hpp"
 
-MeshData<3> brain_coarse{
-"../mesh/brain_coarse.msh",
-// dext, daxn, 
-3, 40,
-// alpha white, gray
-1.2, 0.6,   
-
-// material map (id -> name)
-{{0, "gray matter"}, {1, "white matter"}},
-
-// x0,  y0,  z0,  radius
-0.0, 0.0, 25.0, 20, 
-
-10, // center_threshold 
-{0.0, 0.0, 0.0}, //axonal_center
-
-// a,  b,  c
-60, 40, 30        
-};
-
-MeshData<3> cube40{
-"../mesh/mesh-cube-40.msh",
-// dext, daxn, 
-1, 10,
-// alpha white, gray
-1, 1,   
-
-// material map (id -> name)
-{{0, "gray matter"}, {1, "white matter"}},
-
-// x0,  y0,  z0,  radius
-0.5, 0.0, 0.1, 0.3, 
-
-0.1, // center_threshold 
-{0.5, 0.5, 0.5}, //axonal_center
-
-// a,  b,  c
-0.25, 0.25, 0.25        
-};
-
-MeshData<2> sagittal{
-"../mesh/sagittal_mesh.msh",
-// dext, daxn, 
-5, 50,
-// alpha white, gray
-2, 1,   
-
-// material map (id -> name)
-{{0, "gray matter"}, {1, "white matter"}},
-
-// x0,  y0,  z0,  radius
-230, 100, 0, 20, 
-
-5, // center_threshold 
-{190.0, 140.0}, //axonal_center
-
-// a,  b,  c
-70, 50, 30   
-};
-
-
 MeshData<3> MNI{
-"../mesh/MNI_mesh_ARuzza.msh",
-// dext, daxn, 
-3, 50,
-// alpha white, gray
-1.2, 0.6,   
+    "../mesh/MNI_mesh_ARuzza.msh", // mesh_file_name
+    3,   // dext
+    50,  // daxn
+    1.2, // alpha_coeff_white
+    0.6, // alpha_coeff_gray
+    {    // material_names (id -> name)
+        {0, "gray matter"},
+        {1, "white matter"}
+    },
+    -40, -18.0, -10.0, // x0, y0, z0 (initial condition center coords)
+    15, // radius
+    10, // center_threshold
+    {0.0, 0.0, 40.0}, // axonal_center
+    60, // a (X axis)
+    40, // b (Y axis)
+    30  // c (Z axis)
+};
 
-// material map (id -> name)
-{{0, "gray matter"}, {1, "white matter"}},
+MeshData<3> Ernie{
+    "../mesh/ernie_brain_dealii.msh", // mesh_file_name
+    3,   // dext
+    50,  // daxn
+    1.2, // alpha_coeff_white
+    0.6, // alpha_coeff_gray
+    {    // material_names (id -> name)
+        {1, "white matter"},
+        {2, "gray matter"}
+    },
+    0, 0, 25.0, // x0, y0, z0 (initial condition center coords)
+    15, // radius
+    10, // center_threshold
+    {0.0, 0.0, 0.0}, // axonal_center
+    60, // a (X axis)
+    40, // b (Y axis)
+    30  // c (Z axis)
+};
 
-// x0,  y0,  z0,  radius
--40.0, -18.0, -10.0, 15, 
+MeshData<3> BrainCoarse{
+    "../mesh/brain_coarse.msh", // mesh_file_name
+    3,   // dext
+    40,  // daxn
+    1.2, // alpha_coeff_white
+    0.6, // alpha_coeff_gray
+    {    // material_names (id -> name)
+        {0, "gray matter"},
+        {1, "white matter"}
+    },
+    0.0, 0.0, 25.0, // x0, y0, z0 (initial condition center coords)
+    20, // radius
+    10, // center_threshold
+    {0.0, 0.0, 0.0}, // axonal_center
+    60, // a (X axis)
+    40, // b (Y axis)
+    30  // c (Z axis)
+};
 
-10, // center_threshold 
-{0.0, 0.0, 40.0}, //axonal_center
+MeshData<3> Cube40{
+    "../mesh/mesh-cube-40.msh", // mesh_file_name
+    1,  // dext
+    10, // daxn
+    1,  // alpha_coeff_white
+    1,  // alpha_coeff_gray
+    {   // material_names (id -> name)
+        {0, "gray matter"},
+        {1, "white matter"}
+    },
+    0.5, 0.0, 0.1, // x0, y0, z0 (initial condition center coords)
+    0.3, // radius
+    0.1,  // center_threshold
+    {0.5, 0.5, 0.5}, // axonal_center
+    0.25, // a (X axis)
+    0.25, // b (Y axis)
+    0.25  // c (Z axis)
+};
 
-// a,  b,  c
-60, 40, 30        
+MeshData<2> Sagittal{
+    "../mesh/sagittal_mesh.msh", // mesh_file_name
+    5,  // dext
+    50, // daxn
+    2,  // alpha_coeff_white
+    1,  // alpha_coeff_gray
+    {   // material_names (id -> name)
+        {0, "gray matter"},
+        {1, "white matter"}
+    }, 
+    230, 100, 0, // x0, y0, z0 (initial condition center coords)
+    20, // radius
+    5,  // center_threshold
+    {190.0, 140.0}, // axonal_center
+    70, // a (X axis)
+    40, // b (Y axis)
+    30  // c (Z axis)
+};
+
+MeshData<2> Sagittal_whiteGrayDiff{
+    "../mesh/sagittal_mesh.msh", // mesh_file_name
+    5,  // dext
+    50, // daxn
+    0.2,  // alpha_coeff_white
+    7,  // alpha_coeff_gray
+    {   // material_names (id -> name)
+        {0, "gray matter"},
+        {1, "white matter"}
+    }, 
+    230, 100, 0, // x0, y0, z0 (initial condition center coords)
+    20, // radius
+    5,  // center_threshold
+    {190.0, 140.0}, // axonal_center
+    70, // a (X axis)
+    40, // b (Y axis)
+    30  // c (Z axis)
 };

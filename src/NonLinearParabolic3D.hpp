@@ -47,17 +47,17 @@ public:
   const std::string mesh_file_name;
   const double dext;
   const double daxn;
-  
-  const double alpha_coeff_white;
-  const double alpha_coeff_gray;
 
   const std::map<unsigned int, std::string> material_names;
+  const std::map<std::string, double> alpha_coeffs;
 
-  // Initial condition center coords
+  // Misfolded protein start sphere center and radius
   const double x0, y0, z0, radius; 
 
+  // Min distance from center to enable axonal diffusion
   const double center_threshold;
-  const Point<dim> axonal_center;
+
+  const Point<dim> axonal_center; // Elliptical and radial axons center
   const double a; // X axis
   const double b; // Y axis
   const double c; // Z axis (for 3D)
@@ -68,15 +68,8 @@ class NonLinearParabolic3D
 {
   public:
   // Physical dimension (1D, 2D, 3D)
-  static constexpr unsigned int dim = 2;
+  static constexpr unsigned int dim = 3;
   using Mesh = MeshData<dim>;
-
-  // Misfolded protein start sphere center and radius
-  // static constexpr double x0 = 0, y0 = 0, z0=25; // BRAIN_COARSE & Ernie
-  // static constexpr double radius = 20;
-
-  // static constexpr double x0 = -40, y0 = -18, z0=-10; // MNI_mesh
-  // static constexpr double radius = 15;
 
   // Function for the mu_0 coefficient.
   class FunctionD : public Function<dim>
@@ -195,9 +188,8 @@ class NonLinearParabolic3D
           const Point<dim> &/*p*/,
           const unsigned int /*component*/ = 0) //cannot override
     {
-      const char matter = mesh.material_names.at(material_id)[0];
-      if (matter == 'g') return mesh.alpha_coeff_gray;
-      else return mesh.alpha_coeff_white;
+      const std::string matter = mesh.material_names.at(material_id);
+      return mesh.alpha_coeffs.at(matter);
     }
   };
 

@@ -19,5 +19,6 @@ $ make
 ```
 The executable will be created into `build`, and can be executed through
 ```bash
-$ ./executable-name
+$ ./main
 ```
+The output .vtu and .pvtu files will be in `build/output`

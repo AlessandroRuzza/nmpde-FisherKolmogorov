@@ -20,8 +20,8 @@ MeshData<3> MNI{
     15, // radius
     10, // center_threshold
     {0.0, 0.0, 40.0}, // axonal_center
-    60, // a (X axis)
-    40, // b (Y axis)
+    40, // a (X axis)
+    60, // b (Y axis)
     30  // c (Z axis)
 };
 

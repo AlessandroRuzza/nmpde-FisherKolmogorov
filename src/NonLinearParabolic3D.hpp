@@ -45,10 +45,11 @@ template<unsigned int dim>
 struct MeshData{
 public:
   const std::string mesh_file_name;
-  const double dext;
-  const double daxn;
 
   const std::map<unsigned int, std::string> material_names;
+
+  const std::map<std::string, double> isotropic_diffusion;
+  const std::map<std::string, double> axonal_diffusion;
   const std::map<std::string, double> alpha_coeffs;
 
   // Misfolded protein start sphere center and radius
@@ -68,7 +69,7 @@ class NonLinearParabolic3D
 {
   public:
   // Physical dimension (1D, 2D, 3D)
-  static constexpr unsigned int dim = 3;
+  static constexpr unsigned int dim = 2;
   using Mesh = MeshData<dim>;
 
   // Function for the mu_0 coefficient.
@@ -150,7 +151,7 @@ class NonLinearParabolic3D
     {}
 
     virtual void
-    tensor_value(const Point<dim> &p, Tensor<2,dim> &retVal) const
+    tensor_value(unsigned int material_id, const Point<dim> &p, Tensor<2,dim> &retVal) const
     {
       Tensor<2,dim> identity = unit_symmetric_tensor<dim>();
       Tensor<1, dim> axonal_vector;
@@ -169,8 +170,11 @@ class NonLinearParabolic3D
       }
 
       Tensor<2, dim> tensor_product = outer_product(axonal_vector, axonal_vector);
-
-      retVal = mesh.dext*identity + mesh.daxn*tensor_product;
+      
+      const std::string matter = mesh.material_names.at(material_id);
+      const double dext = mesh.isotropic_diffusion.at(matter);
+      const double daxn = mesh.axonal_diffusion.at(matter);
+      retVal = dext*identity + daxn*tensor_product;
     }
   };
 

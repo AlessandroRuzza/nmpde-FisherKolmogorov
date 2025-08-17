@@ -167,7 +167,7 @@ NonLinearParabolic3D::assemble_system()
         {
           // Evaluate coefficients on this quadrature node.
           Tensor<2,dim> d_loc;
-          d.tensor_value(fe_values.quadrature_point(q), d_loc);
+          d.tensor_value(cell->material_id(), fe_values.quadrature_point(q), d_loc);
 
           const double alpha_loc = alpha.value(cell->material_id(), fe_values.quadrature_point(q));
 

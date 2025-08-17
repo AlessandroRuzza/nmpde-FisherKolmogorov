@@ -2,19 +2,29 @@
 
 MeshData<3> MNI{
     "../mesh/MNI_mesh_ARuzza_with_phys.msh", // mesh_file_name
-    3,   // dext
-    50,  // daxn
     {    // material_names (id -> name)
         {0, "gray matter"},
         {1, "CSF"},
         {2, "white matter"},
         {3, "ventricule"}
     },
+    {    // isotropic diffusion (name -> value)
+        {"gray matter", 3},
+        {"CSF", 0},
+        {"white matter", 3},
+        {"ventricule", 0}
+    },
+    {    // axonal diffusion (name -> value)
+        {"gray matter", 50},
+        {"CSF", 0},
+        {"white matter", 50},
+        {"ventricule", 0}
+    },
     {    // alpha coefficients (name -> value)
         {"gray matter", 0.6},
-        {"CSF", 0.06},
-        {"white matter", 1.2},
-        {"ventricule", 8}
+        {"CSF", 0},
+        {"white matter", 1.8},
+        {"ventricule", 0}
     },
     -40, -18.0, -10.0, // x0, y0, z0 (initial condition center coords)
     15, // radius
@@ -27,11 +37,17 @@ MeshData<3> MNI{
 
 MeshData<3> Ernie{
     "../mesh/ernie_brain_dealii.msh", // mesh_file_name
-    3,   // dext
-    50,  // daxn
     {    // material_names (id -> name)
         {1, "white matter"},
         {2, "gray matter"}
+    },
+    {    // isotropic diffusion (name -> value)
+        {"white matter", 3},
+        {"gray matter", 3}
+    },
+    {    // axonal diffusion (name -> value)
+        {"white matter", 50},
+        {"gray matter", 50}
     },
     {    // alpha coefficients (name -> value)
         {"white matter", 1.2},
@@ -48,11 +64,17 @@ MeshData<3> Ernie{
 
 MeshData<3> BrainCoarse{
     "../mesh/brain_coarse.msh", // mesh_file_name
-    3,   // dext
-    40,  // daxn
     {    // material_names (id -> name)
         {0, "gray matter"},
         {1, "white matter"}
+    },
+    {    // isotropic diffusion (name -> value)
+        {"white matter", 3},
+        {"gray matter", 3}
+    },
+    {    // axonal diffusion (name -> value)
+        {"white matter", 40},
+        {"gray matter", 40}
     },
     {    // alpha coefficients (name -> value)
         {"gray matter", 0.6},
@@ -69,11 +91,17 @@ MeshData<3> BrainCoarse{
 
 MeshData<3> Cube40{
     "../mesh/mesh-cube-40.msh", // mesh_file_name
-    1,  // dext
-    10, // daxn
     {   // material_names (id -> name)
         {0, "gray matter"},
         {1, "white matter"}
+    },
+    {    // isotropic diffusion (name -> value)
+        {"white matter", 1},
+        {"gray matter", 1}
+    },
+    {    // axonal diffusion (name -> value)
+        {"white matter", 10},
+        {"gray matter", 10}
     },
     {    // alpha coefficients (name -> value)
         {"gray matter", 1},
@@ -90,12 +118,18 @@ MeshData<3> Cube40{
 
 MeshData<2> Sagittal{
     "../mesh/sagittal_mesh.msh", // mesh_file_name
-    5,  // dext
-    50, // daxn
     {   // material_names (id -> name)
         {0, "gray matter"},
         {1, "white matter"}
     }, 
+    {    // isotropic diffusion (name -> value)
+        {"white matter", 5},
+        {"gray matter", 5}
+    },
+    {    // axonal diffusion (name -> value)
+        {"white matter", 50},
+        {"gray matter", 50}
+    },
     {    // alpha coefficients (name -> value)
         {"gray matter", 1},
         {"white matter", 2}
@@ -111,15 +145,21 @@ MeshData<2> Sagittal{
 
 MeshData<2> Sagittal_whiteGrayDiff{
     "../mesh/sagittal_mesh.msh", // mesh_file_name
-    5,  // dext
-    50, // daxn
     {   // material_names (id -> name)
         {0, "gray matter"},
         {1, "white matter"}
     }, 
+    {    // isotropic diffusion (name -> value)
+        {"white matter", 20},
+        {"gray matter", 0.05}
+    },
+    {    // axonal diffusion (name -> value)
+        {"white matter", 0.05},
+        {"gray matter", 30}
+    },
     {    // alpha coefficients (name -> value)
-        {"gray matter", 7},
-        {"white matter", 0.2}
+        {"gray matter", 1},
+        {"white matter", 2}
     },
     230, 100, 0, // x0, y0, z0 (initial condition center coords)
     20, // radius

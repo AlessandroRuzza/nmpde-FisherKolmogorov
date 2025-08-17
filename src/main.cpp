@@ -7,7 +7,7 @@
 
 // Available meshes in mesh_data.hpp:
 // 3D: MNI, Ernie, BrainCoarse, Cube40
-// 2D: Sagittal
+// 2D: Sagittal, Sagittal_whiteGrayDiff (the second one has much larger differences in coefficient values on the 2 materials)
 
 int main(int argc, char * argv[])
 {
@@ -21,7 +21,7 @@ int main(int argc, char * argv[])
     std::cout << "Note: axonal_vector field will be written only at the first time step (time_step=0), to save disk space." << std::endl;
   }
 
-  NonLinearParabolic3D problem(MNI, r, T, deltat, 2);
+  NonLinearParabolic3D problem(Sagittal_whiteGrayDiff, r, T, deltat, 2);
 
   problem.setup();
   problem.solve();

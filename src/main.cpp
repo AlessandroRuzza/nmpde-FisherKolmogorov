@@ -16,12 +16,22 @@ int main(int argc, char * argv[])
   const unsigned int r = 1;
   const double T      = 30;
   const double deltat = 1.0/12.0;
-  
+
+  if(argc < 2){
+    std::cerr << "Usage: " << argv[0] << " <mesh_preset>" << std::endl;
+    return 1;
+  }
+
+  constexpr unsigned int dim = 2;
+
+  const std::string mesh_preset = argv[1];
+  MeshData<dim> mesh = get_mesh_data<dim>(mesh_preset);
+
   if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0){
     std::cout << "Note: axonal_vector field will be written only at the first time step (time_step=0), to save disk space." << std::endl;
   }
 
-  NonLinearParabolic3D problem(Sagittal_whiteGrayDiff, r, T, deltat, 2);
+  NonLinearParabolic3D problem(mesh, r, T, deltat, 2);
 
   problem.setup();
   problem.solve();

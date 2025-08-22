@@ -282,7 +282,7 @@ void
 FisherKolmogorov::output(const unsigned int &time_step) const
 {
   DataOut<dim> data_out;
-  data_out.add_data_vector(dof_handler, solution, "u");
+  data_out.add_data_vector(dof_handler, solution, "c");
 
   std::vector<unsigned int> partition_int(mesh.n_active_cells());
   GridTools::get_subdomain_association(mesh, partition_int);

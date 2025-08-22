@@ -1,5 +1,5 @@
-#ifndef NON_LINEAR_PARABOLIC_3D_HPP
-#define NON_LINEAR_PARABOLIC_3D_HPP
+#ifndef FISHER_KOLMOGOROV_HPP
+#define FISHER_KOLMOGOROV_HPP
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/function_lib.h>
@@ -65,11 +65,11 @@ public:
 };
 
 // Class representing the non-linear diffusion problem.
-class NonLinearParabolic3D
+class FisherKolmogorov
 {
   public:
   // Physical dimension (1D, 2D, 3D)
-  static constexpr unsigned int dim = 2;
+  static constexpr unsigned int dim = 3;
   using Mesh = MeshData<dim>;
 
   // Function for the mu_0 coefficient.
@@ -222,7 +222,7 @@ class NonLinearParabolic3D
   
   // Constructor. We provide the final time, time step Delta t and theta method
   // parameter as constructor arguments.
-  NonLinearParabolic3D(const Mesh &mesh_, 
+  FisherKolmogorov(const Mesh &mesh_, 
                 const unsigned int &r_,
                 const double       &T_,
                 const double       &deltat_,
@@ -355,8 +355,8 @@ protected:
   Vector<double> axonal_vector;
   struct AxonTensorFunction : public TensorFunction<1, dim, double>
   {
-      const NonLinearParabolic3D &parent;
-      AxonTensorFunction(const NonLinearParabolic3D &p) : TensorFunction<1, dim, double>(), parent(p) {}
+      const FisherKolmogorov &parent;
+      AxonTensorFunction(const FisherKolmogorov &p) : TensorFunction<1, dim, double>(), parent(p) {}
 
       virtual Tensor<1, dim, double> value(const Point<dim, double> &p) const override
       {

@@ -1,4 +1,4 @@
-#include "NonLinearParabolic3D.hpp"
+#include "FisherKolmogorov.hpp"
 #include "mesh_data.hpp"
 
 #include <fstream>
@@ -23,16 +23,16 @@ int main(int argc, char * argv[])
     return 1;
   }
 
-  constexpr unsigned int dim = 2;
+  constexpr unsigned int dim = 3;
 
   const std::string mesh_preset = argv[1];
   MeshData<dim> mesh = get_mesh_data<dim>(mesh_preset, mpi_rank);
 
   if(mpi_rank == 0){
-    std::cout << "Note: axonal_vector field will be written only at the first time step (time_step=0), to save disk space." << std::endl;
+    std::cout << "Note: axonal_vector field and material_id will be written only at the first time step (time_step=0), to save disk space." << std::endl;
   }
 
-  NonLinearParabolic3D problem(mesh, r, T, deltat, 2);
+  FisherKolmogorov problem(mesh, r, T, deltat, 2);
 
   problem.setup();
   problem.solve();

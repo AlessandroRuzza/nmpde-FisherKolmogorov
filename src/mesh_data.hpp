@@ -1,4 +1,4 @@
-#include "NonLinearParabolic3D.hpp"
+#include "FisherKolmogorov.hpp"
 
 template<unsigned int dim>
 MeshData<dim> get_mesh_data(const std::string &mesh_preset, unsigned int mpiRank);

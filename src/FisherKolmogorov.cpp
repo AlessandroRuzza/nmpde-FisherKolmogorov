@@ -1,8 +1,8 @@
 
-#include "NonLinearParabolic3D.hpp"
+#include "FisherKolmogorov.hpp"
 
 void
-NonLinearParabolic3D::setup()
+FisherKolmogorov::setup()
 {
   // Create the mesh.
   {
@@ -112,7 +112,7 @@ NonLinearParabolic3D::setup()
 }
 
 void
-NonLinearParabolic3D::assemble_system()
+FisherKolmogorov::assemble_system()
 {
   const unsigned int dofs_per_cell = fe->dofs_per_cell;
   const unsigned int n_q           = quadrature->size();
@@ -228,7 +228,7 @@ NonLinearParabolic3D::assemble_system()
 }
 
 void
-NonLinearParabolic3D::solve_linear_system()
+FisherKolmogorov::solve_linear_system()
 {
   SolverControl solver_control(10000, 1e-9); //* residual_vector.l2_norm());
 
@@ -241,7 +241,7 @@ NonLinearParabolic3D::solve_linear_system()
 }
 
 void
-NonLinearParabolic3D::solve_newton()
+FisherKolmogorov::solve_newton()
 {
   const unsigned int n_max_iters        = 10;
   const double       residual_tolerance = 1e-4;
@@ -279,7 +279,7 @@ NonLinearParabolic3D::solve_newton()
 }
 
 void 
-NonLinearParabolic3D::output(const unsigned int &time_step) const
+FisherKolmogorov::output(const unsigned int &time_step) const
 {
   DataOut<dim> data_out;
   data_out.add_data_vector(dof_handler, solution, "u");
@@ -305,7 +305,7 @@ NonLinearParabolic3D::output(const unsigned int &time_step) const
 }
 
 void
-NonLinearParabolic3D::solve()
+FisherKolmogorov::solve()
 {
   pcout << "===============================================" << std::endl;
 

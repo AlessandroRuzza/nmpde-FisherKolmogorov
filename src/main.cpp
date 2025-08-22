@@ -12,6 +12,7 @@
 int main(int argc, char * argv[])
 {
   Utilities::MPI::MPI_InitFinalize mpi_init(argc, argv);
+  const unsigned int mpi_rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
 
   const unsigned int r = 1;
   const double T      = 30;
@@ -25,9 +26,9 @@ int main(int argc, char * argv[])
   constexpr unsigned int dim = 2;
 
   const std::string mesh_preset = argv[1];
-  MeshData<dim> mesh = get_mesh_data<dim>(mesh_preset);
+  MeshData<dim> mesh = get_mesh_data<dim>(mesh_preset, mpi_rank);
 
-  if(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0){
+  if(mpi_rank == 0){
     std::cout << "Note: axonal_vector field will be written only at the first time step (time_step=0), to save disk space." << std::endl;
   }
 

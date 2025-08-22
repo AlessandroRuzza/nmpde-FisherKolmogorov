@@ -1,7 +1,7 @@
 #include "NonLinearParabolic3D.hpp"
 
 template<unsigned int dim>
-MeshData<dim> get_mesh_data(const std::string &mesh_preset);
+MeshData<dim> get_mesh_data(const std::string &mesh_preset, unsigned int mpiRank);
 
 MeshData<3> MNI{
     "../mesh/MNI_mesh_ARuzza_with_phys.msh", // mesh_file_name
@@ -87,8 +87,8 @@ MeshData<3> BrainCoarse{
     20, // radius
     10, // center_threshold
     {0.0, 0.0, 0.0}, // axonal_center
-    60, // a (X axis)
-    40, // b (Y axis)
+    40, // a (X axis)
+    60, // b (Y axis)
     30  // c (Z axis)
 };
 
@@ -173,40 +173,52 @@ MeshData<2> Sagittal_whiteGrayDiff{
     30  // c (Z axis)
 };
 
-void printErrValidOptions(){
-    std::cerr << "Valid 3D options are: MNI; Ernie; BrainCoarse; Cube40" << std::endl;
-    std::cerr << "Valid 2D options are: Sagittal; Sagittal_whiteGrayDiff" << std::endl;
+void printErrValidOptions(const std::string& mesh_preset, unsigned int dim, unsigned int mpiRank){
+    if (mpiRank != 0) return;
+    if (dim == 3) {
+        std::cerr << "Unknown mesh preset for 3D: " << mesh_preset << std::endl;
+        std::cerr << "Valid 3D options are: MNI; Ernie; BrainCoarse; Cube40" << std::endl;
+    } else if (dim == 2) {
+        std::cerr << "Unknown mesh preset for 2D: " << mesh_preset << std::endl;
+        std::cerr << "Valid 2D options are: Sagittal; Sagittal_whiteGrayDiff" << std::endl;
+    }
+}
+
+void printRankZero(const std::string& msg, unsigned int mpiRank){
+    if (mpiRank == 0) {
+        std::cout << msg << std::endl;
+    }
 }
 
 template<>
-MeshData<3> get_mesh_data(const std::string &mesh_preset){
+MeshData<3> get_mesh_data(const std::string &mesh_preset, unsigned int mpiRank){
     if(mesh_preset == "MNI"){
-        std::cout << "Using MNI mesh." << std::endl;
+        printRankZero("Using MNI mesh.", mpiRank);
         return MNI;
     } else if(mesh_preset == "Ernie"){
-        std::cout << "Using Ernie mesh." << std::endl;
+        printRankZero("Using Ernie mesh.", mpiRank);
         return Ernie;
     } else if(mesh_preset == "BrainCoarse"){
-        std::cout << "Using BrainCoarse mesh." << std::endl;
+        printRankZero("Using BrainCoarse mesh.", mpiRank);
         return BrainCoarse;
     } else if(mesh_preset == "Cube40"){
-        std::cout << "Using Cube40 mesh." << std::endl;
+        printRankZero("Using Cube40 mesh.", mpiRank);
         return Cube40;
     } else {
-        std::cerr << "Unknown mesh preset for 3D: " << mesh_preset << std::endl;
+        printErrValidOptions(mesh_preset, 3, mpiRank);
         exit(-1);
     }
 }
 template<>
-MeshData<2> get_mesh_data(const std::string &mesh_preset){
+MeshData<2> get_mesh_data(const std::string &mesh_preset, unsigned int mpiRank){
     if(mesh_preset == "Sagittal"){
-        std::cout << "Using Sagittal mesh." << std::endl;
+        printRankZero("Using Sagittal mesh.", mpiRank);
         return Sagittal;
     } else if(mesh_preset == "Sagittal_whiteGrayDiff"){
-        std::cout << "Using Sagittal_whiteGrayDiff mesh." << std::endl;
+        printRankZero("Using Sagittal mesh with more pronounced differences between white and gray matter.", mpiRank);
         return Sagittal_whiteGrayDiff;
     } else {
-        std::cerr << "Unknown mesh preset for 2D: " << mesh_preset << std::endl;
+        printErrValidOptions(mesh_preset, 2, mpiRank);
         exit(-1);
     }
 }

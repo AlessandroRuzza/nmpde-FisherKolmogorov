@@ -33,6 +33,11 @@
 *.out
 *.app
 
+# Speedup analysis
+*.csv
+*.png
+logs/
+
 */build/*
 build
 cmake-build-debug

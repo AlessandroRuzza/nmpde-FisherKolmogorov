@@ -4,7 +4,7 @@ template<unsigned int dim>
 MeshData<dim> get_mesh_data(const std::string &mesh_preset, unsigned int mpiRank);
 
 MeshData<3> MNI{
-    "../mesh/MNI_mesh_ARuzza_with_phys.msh", // mesh_file_name
+    "../mesh/MNI_with_phys.msh", // mesh_file_name
     {    // material_names (id -> name)
         {0, "gray matter"},
         {1, "CSF"},
@@ -120,7 +120,7 @@ MeshData<3> Cube40{
 };
 
 MeshData<2> Sagittal{
-    "../mesh/sagittal_mesh.msh", // mesh_file_name
+    "../mesh/sagittal.msh", // mesh_file_name
     {   // material_names (id -> name)
         {0, "gray matter"},
         {1, "white matter"}
@@ -147,7 +147,7 @@ MeshData<2> Sagittal{
 };
 
 MeshData<2> Sagittal_whiteGrayDiff{
-    "../mesh/sagittal_mesh.msh", // mesh_file_name
+    "../mesh/sagittal.msh", // mesh_file_name
     {   // material_names (id -> name)
         {0, "gray matter"},
         {1, "white matter"}
@@ -172,7 +172,6 @@ MeshData<2> Sagittal_whiteGrayDiff{
     40, // b (Y axis)
     30  // c (Z axis)
 };
-
 
 void printErrValidOptions(const std::string& mesh_preset, unsigned int mpiRank){
     if (mpiRank != 0) return;

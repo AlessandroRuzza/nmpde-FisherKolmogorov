@@ -15,7 +15,7 @@ int main(int argc, char * argv[])
   const unsigned int mpi_rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
 
   const unsigned int r = 1;
-  const double T      = 30;
+  const double T      = 10;
   const double deltat = 1.0/12.0;
 
   if(argc < 2){
@@ -23,22 +23,26 @@ int main(int argc, char * argv[])
     return 1;
   }
 
-  constexpr unsigned int dim = 3;
-
   const std::string mesh_preset = argv[1];
-  MeshData<dim> mesh = get_mesh_data<dim>(mesh_preset, mpi_rank);
+  const unsigned int dim = get_mesh_dimension(mesh_preset, mpi_rank);
 
-  if(mpi_rank == 0){
-    std::cout << "Note: axonal_vector field and material_id will be written only at the first time step (time_step=0), to save disk space." << std::endl;
+  printRankZero("Note: axonal_vector field and material_id will be written only at the first time step (time_step=0), to save disk space.", mpi_rank);
+  
+  if(dim == 2) {
+    MeshData<2> mesh = get_mesh_data<2>(mesh_preset, mpi_rank);
+    FisherKolmogorov<2> problem(mesh, r, T, deltat, 2);
+
+    problem.setup();
+    problem.solve();
+  } 
+  else { // dim == 3
+    MeshData<3> mesh = get_mesh_data<3>(mesh_preset, mpi_rank);
+    FisherKolmogorov<3> problem(mesh, r, T, deltat, 2);
+
+    problem.setup();
+    problem.solve();
   }
-
-  FisherKolmogorov problem(mesh, r, T, deltat, 2);
-
-  problem.setup();
-  problem.solve();
   
   return 0;
 }
-
-
 

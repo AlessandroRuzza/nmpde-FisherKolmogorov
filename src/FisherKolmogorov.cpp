@@ -1,8 +1,8 @@
 
 #include "FisherKolmogorov.hpp"
 
-void
-FisherKolmogorov::setup()
+template<unsigned int dim>
+void FisherKolmogorov<dim>::setup()
 {
   // Create the mesh.
   {
@@ -111,8 +111,8 @@ FisherKolmogorov::setup()
   }
 }
 
-void
-FisherKolmogorov::assemble_system()
+template<unsigned int dim>
+void FisherKolmogorov<dim>::assemble_system()
 {
   const unsigned int dofs_per_cell = fe->dofs_per_cell;
   const unsigned int n_q           = quadrature->size();
@@ -227,8 +227,8 @@ FisherKolmogorov::assemble_system()
   residual_vector.compress(VectorOperation::add);
 }
 
-void
-FisherKolmogorov::solve_linear_system()
+template<unsigned int dim>
+void FisherKolmogorov<dim>::solve_linear_system()
 {
   SolverControl solver_control(10000, 1e-9); //* residual_vector.l2_norm());
 
@@ -240,8 +240,8 @@ FisherKolmogorov::solve_linear_system()
   pcout << "  " << solver_control.last_step() << " GMRES iterations" << std::endl;
 }
 
-void
-FisherKolmogorov::solve_newton()
+template<unsigned int dim>
+void FisherKolmogorov<dim>::solve_newton()
 {
   const unsigned int n_max_iters        = 10;
   const double       residual_tolerance = 1e-4;
@@ -278,8 +278,8 @@ FisherKolmogorov::solve_newton()
     }
 }
 
-void 
-FisherKolmogorov::output(const unsigned int &time_step) const
+template<unsigned int dim>
+void FisherKolmogorov<dim>::output(const unsigned int &time_step) const
 {
   DataOut<dim> data_out;
   data_out.add_data_vector(dof_handler, solution, "c");
@@ -304,8 +304,8 @@ FisherKolmogorov::output(const unsigned int &time_step) const
   data_out.write_vtu_with_pvtu_record("./output/", "output", time_step, MPI_COMM_WORLD, 3);
 }
 
-void
-FisherKolmogorov::solve()
+template<unsigned int dim>
+void FisherKolmogorov<dim>::solve()
 {
   pcout << "===============================================" << std::endl;
 
@@ -374,3 +374,6 @@ FisherKolmogorov::solve()
       pcout << std::endl;
     }
 }
+
+template class FisherKolmogorov<2>;
+template class FisherKolmogorov<3>;

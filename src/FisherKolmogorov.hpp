@@ -65,11 +65,11 @@ public:
 };
 
 // Class representing the non-linear diffusion problem.
+template<unsigned int dim>
 class FisherKolmogorov
 {
   public:
   // Physical dimension (1D, 2D, 3D)
-  static constexpr unsigned int dim = 3;
   using Mesh = MeshData<dim>;
 
   // Function for the mu_0 coefficient.

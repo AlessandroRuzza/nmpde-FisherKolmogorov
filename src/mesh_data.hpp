@@ -173,25 +173,41 @@ MeshData<2> Sagittal_whiteGrayDiff{
     30  // c (Z axis)
 };
 
-void printErrValidOptions(const std::string& mesh_preset, unsigned int dim, unsigned int mpiRank){
+
+void printErrValidOptions(const std::string& mesh_preset, unsigned int mpiRank){
     if (mpiRank != 0) return;
-    if (dim == 3) {
-        std::cerr << "Unknown mesh preset for 3D: " << mesh_preset << std::endl;
-        std::cerr << "Valid 3D options are: MNI; Ernie; BrainCoarse; Cube40" << std::endl;
-    } else if (dim == 2) {
-        std::cerr << "Unknown mesh preset for 2D: " << mesh_preset << std::endl;
-        std::cerr << "Valid 2D options are: Sagittal; Sagittal_whiteGrayDiff" << std::endl;
-    }
+    std::cerr << "Unknown mesh preset: " << mesh_preset << std::endl;
+    std::cerr << "Valid options are: " << std::endl;
+
+    std::cerr << "2D: " << std::endl;
+    std::cerr << " - Sagittal" << std::endl;
+    std::cerr << " - Sagittal_whiteGrayDiff" << std::endl;
+
+    std::cerr << "3D: " << std::endl;
+    std::cerr << " - MNI" << std::endl;
+    std::cerr << " - Ernie" << std::endl;
+    std::cerr << " - BrainCoarse" << std::endl;
+    std::cerr << " - Cube40" << std::endl;
 }
 
-void printRankZero(const std::string& msg, unsigned int mpiRank){
-    if (mpiRank == 0) {
-        std::cout << msg << std::endl;
+inline void printRankZero(const std::string& msg, unsigned int mpiRank){
+    if (mpiRank == 0) std::cout << msg << std::endl;
+}
+
+unsigned int get_mesh_dimension(const std::string& mesh_preset, unsigned int mpiRank){
+    if(mesh_preset == "MNI" || mesh_preset == "Ernie" || mesh_preset == "BrainCoarse" || mesh_preset == "Cube40"){
+        return 3;
+    } else if(mesh_preset == "Sagittal" || mesh_preset == "Sagittal_whiteGrayDiff"){
+        return 2;
+    }
+    else{
+        printErrValidOptions(mesh_preset, mpiRank);
+        exit(-1);
     }
 }
 
 template<>
-MeshData<3> get_mesh_data(const std::string &mesh_preset, unsigned int mpiRank){
+MeshData<3> get_mesh_data(const std::string& mesh_preset, unsigned int mpiRank){
     if(mesh_preset == "MNI"){
         printRankZero("Using MNI mesh.", mpiRank);
         return MNI;
@@ -205,12 +221,12 @@ MeshData<3> get_mesh_data(const std::string &mesh_preset, unsigned int mpiRank){
         printRankZero("Using Cube40 mesh.", mpiRank);
         return Cube40;
     } else {
-        printErrValidOptions(mesh_preset, 3, mpiRank);
+        printErrValidOptions(mesh_preset, mpiRank);
         exit(-1);
     }
 }
 template<>
-MeshData<2> get_mesh_data(const std::string &mesh_preset, unsigned int mpiRank){
+MeshData<2> get_mesh_data(const std::string& mesh_preset, unsigned int mpiRank){
     if(mesh_preset == "Sagittal"){
         printRankZero("Using Sagittal mesh.", mpiRank);
         return Sagittal;
@@ -218,7 +234,7 @@ MeshData<2> get_mesh_data(const std::string &mesh_preset, unsigned int mpiRank){
         printRankZero("Using Sagittal mesh with more pronounced differences between white and gray matter.", mpiRank);
         return Sagittal_whiteGrayDiff;
     } else {
-        printErrValidOptions(mesh_preset, 2, mpiRank);
+        printErrValidOptions(mesh_preset, mpiRank);
         exit(-1);
     }
 }

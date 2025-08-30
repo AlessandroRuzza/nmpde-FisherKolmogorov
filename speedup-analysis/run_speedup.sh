@@ -60,8 +60,8 @@ time_cmd() {
 echo "[INFO] Running with $CONFIG_NAME configuration"
 
 # Validate configuration by running a test execution with timeout
-timeout_sec=1
-echo "[INFO] Validating configuration: $CONFIG_NAME (timeout: $timeout_sec s, threads: $(nproc))"
+timeout_sec=5
+echo "[INFO] Validating configuration: $CONFIG_NAME (timeout: ${timeout_sec}s)"
 timeout $timeout_sec "$MAIN_BIN" "$CONFIG_NAME" >/dev/null 2>/dev/null
 exit_code=$?
 

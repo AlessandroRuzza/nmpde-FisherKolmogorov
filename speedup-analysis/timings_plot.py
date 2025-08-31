@@ -23,12 +23,12 @@ def main(csv_path: str = "speedup_results.csv", out_png: str = "speedup_plot.png
     df["mesh_preset"] = df["mesh_preset_key"].apply(os.path.basename)
     df["mesh"]   = df["mesh_preset"].str.replace(".toml", "", regex=False)
 
-    # Build label "sequential (1)" or "openmp (N)"
+    # Build label "sequential (1)" or "MPI (N)"
     def mk_label(row):
         m = str(row["mode"]).strip().lower()
         if m == "sequential":
             return "sequential (1)"
-        return f"openmp ({int(row['processes'])})"
+        return f"MPI ({int(row['processes'])})"
     df["label"] = df.apply(mk_label, axis=1)
 
     # Average in case there are multiple lines for the same (mesh, label)

@@ -17,6 +17,7 @@ int main(int argc, char * argv[])
   const unsigned int r = 1;
   const double T      = 10;
   const double deltat = 1.0/12.0;
+  const int outputPeriod = 1;
 
   if(argc < 2){
     std::cerr << "Usage: " << argv[0] << " <mesh_preset>" << std::endl;
@@ -30,14 +31,14 @@ int main(int argc, char * argv[])
   
   if(dim == 2) {
     MeshData<2> mesh = get_mesh_data<2>(mesh_preset, mpi_rank);
-    FisherKolmogorov<2> problem(mesh, r, T, deltat, 2);
+    FisherKolmogorov<2> problem(mesh, r, T, deltat, outputPeriod);
 
     problem.setup();
     problem.solve();
   } 
   else { // dim == 3
     MeshData<3> mesh = get_mesh_data<3>(mesh_preset, mpi_rank);
-    FisherKolmogorov<3> problem(mesh, r, T, deltat, 2);
+    FisherKolmogorov<3> problem(mesh, r, T, deltat, outputPeriod);
 
     problem.setup();
     problem.solve();

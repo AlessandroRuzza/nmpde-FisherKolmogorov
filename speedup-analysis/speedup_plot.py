@@ -7,7 +7,7 @@ def main(csv_path, out_png):
     # Load CSV and keep only the necessary columns (no averages)
     df = pd.read_csv(csv_path, dtype=str, keep_default_na=False)
 
-    cols_needed = ["config_key", "processes", "speedup_vs_seq1"]
+    cols_needed = ["mesh_preset_key", "processes", "speedup_vs_seq1"]
     for c in cols_needed:
         if c not in df.columns:
             raise ValueError(f"Column '{c}' not found in CSV")
@@ -17,10 +17,10 @@ def main(csv_path, out_png):
     df["speedup_vs_seq1"] = pd.to_numeric(df["speedup_vs_seq1"], errors="coerce")
 
     # Clean invalid rows
-    df = df.dropna(subset=["config_key", "processes", "speedup_vs_seq1"])
+    df = df.dropna(subset=["mesh_preset_key", "processes", "speedup_vs_seq1"])
 
     # Mesh label: basename without .toml
-    df["mesh"] = df["config_key"].apply(os.path.basename).str.replace(".toml", "", regex=False)
+    df["mesh"] = df["mesh_preset_key"].apply(os.path.basename).str.replace(".toml", "", regex=False)
 
     df = df.drop_duplicates(subset=["mesh", "processes"], keep="first")
     pivot = df.pivot(index="processes", columns="mesh", values="speedup_vs_seq1")

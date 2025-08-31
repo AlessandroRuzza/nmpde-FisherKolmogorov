@@ -12,16 +12,16 @@ import matplotlib.pyplot as plt
 def main(csv_path: str = "speedup_results.csv", out_png: str = "speedup_plot.png"):
     # Load CSV and drop junk rows (e.g., trailing 'f' line)
     df = pd.read_csv(csv_path, dtype=str, keep_default_na=False)
-    needed = {"config_key","mode","processes","mean"}
+    needed = {"mesh_preset_key","mode","processes","mean"}
     df = df[[c for c in df.columns if c in needed]].copy()
     # Coerce numerics; drop bad rows
     df["processes"] = pd.to_numeric(df["processes"], errors="coerce")
     df["mean"]    = pd.to_numeric(df["mean"],    errors="coerce")
-    df = df.dropna(subset=["config_key","mode","processes","mean"])
+    df = df.dropna(subset=["mesh_preset_key","mode","processes","mean"])
 
-    # Normalize config basename and mesh name
-    df["config"] = df["config_key"].apply(os.path.basename)
-    df["mesh"]   = df["config"].str.replace(".toml", "", regex=False)
+    # Normalize mesh_preset basename and mesh name
+    df["mesh_preset"] = df["mesh_preset_key"].apply(os.path.basename)
+    df["mesh"]   = df["mesh_preset"].str.replace(".toml", "", regex=False)
 
     # Build label "sequential (1)" or "openmp (N)"
     def mk_label(row):
@@ -46,7 +46,7 @@ def main(csv_path: str = "speedup_results.csv", out_png: str = "speedup_plot.png
     for col in pivot.columns:
         plt.plot(pivot.index, pivot[col], marker="o", label=col)
 
-    plt.xlabel("mesh (config)")
+    plt.xlabel("mesh (mesh_preset)")
     plt.ylabel("elapsed time [s]")
     plt.title("Timing per mesh (mean over runs)")
     plt.xticks(rotation=45, ha="right")

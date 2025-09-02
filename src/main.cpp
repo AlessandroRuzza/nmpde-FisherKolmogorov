@@ -15,9 +15,9 @@ int main(int argc, char * argv[])
   const unsigned int mpi_rank = Utilities::MPI::this_mpi_process(MPI_COMM_WORLD);
 
   const unsigned int r = 1;
-  const double T      = 10;
+  const double T      = 30;
   const double deltat = 1.0/12.0;
-  const int outputPeriod = 1;
+  const int outputPeriod = 6;
 
   if(argc < 2){
     std::cerr << "Usage: " << argv[0] << " <mesh_preset>" << std::endl;

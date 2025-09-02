@@ -125,12 +125,12 @@ void FisherKolmogorov<dim>::assemble_system()
                           update_JxW_values);
   
   
-  FEFaceValues<dim> fe_values_boundary(*fe,
-                                       *quadrature_boundary,
-                                       update_values |
-                                       update_quadrature_points |
-                                       update_normal_vectors |
-                                       update_JxW_values);
+  // FEFaceValues<dim> fe_values_boundary(*fe,
+  //                                      *quadrature_boundary,
+  //                                      update_values |
+  //                                      update_quadrature_points |
+  //                                      update_normal_vectors |
+  //                                      update_JxW_values);
 
   FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
   Vector<double>     cell_residual(dofs_per_cell);
@@ -163,13 +163,24 @@ void FisherKolmogorov<dim>::assemble_system()
       fe_values.get_function_values(solution_old, solution_old_loc);
       fe_values.get_function_gradients(solution_old, solution_gradient_old_loc);
 
+      int material_id = cell->material_id();
+
+      // Validate material id, warn about unrecognized ids
+      try{
+        mesh_data.material_names.at(material_id);
+      } catch (const std::out_of_range& e) {
+        pcout << "[ERROR] Out_of_Range. Found material ID = " << material_id << ", unmapped in MeshData." << std::endl;
+        pcout << "Add a mapping for " << material_id << " in mesh_data.hpp and recompile." << std::endl;
+        exit(-1);
+      }
+
       for (unsigned int q = 0; q < n_q; ++q)
         {
           // Evaluate coefficients on this quadrature node.
           Tensor<2,dim> d_loc;
-          d.tensor_value(cell->material_id(), fe_values.quadrature_point(q), d_loc);
+          d.tensor_value(material_id, fe_values.quadrature_point(q), d_loc);
 
-          const double alpha_loc = alpha.value(cell->material_id(), fe_values.quadrature_point(q));
+          const double alpha_loc = alpha.value(material_id, fe_values.quadrature_point(q));
 
           for (unsigned int i = 0; i < dofs_per_cell; ++i)
             {

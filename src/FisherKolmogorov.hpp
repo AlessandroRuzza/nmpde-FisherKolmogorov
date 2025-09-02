@@ -230,6 +230,7 @@ class FisherKolmogorov
     : mpi_size(Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD))
     , mpi_rank(Utilities::MPI::this_mpi_process(MPI_COMM_WORLD))
     , pcout(std::cout, mpi_rank == 0)
+    , mesh_data(mesh_)
     , d(mesh_)
     , alpha(mesh_)
     , c_0(mesh_)
@@ -280,6 +281,8 @@ protected:
   ConditionalOStream pcout;
 
   // Problem definition. ///////////////////////////////////////////////////////
+  // Mesh data.
+  Mesh mesh_data;
 
   // mu_0 coefficient.
   FunctionD d;

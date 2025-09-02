@@ -95,20 +95,17 @@ MeshData<3> BrainCoarse{
 MeshData<3> Cube40{
     "../mesh/mesh-cube-40.msh", // mesh_file_name
     {   // material_names (id -> name)
-        {0, "gray matter"},
-        {1, "white matter"}
+        {0, "matter"},
+        {10, "matter"}
     },
     {    // isotropic diffusion (name -> value)
-        {"white matter", 1},
-        {"gray matter", 1}
+        {"matter", 1}
     },
     {    // axonal diffusion (name -> value)
-        {"white matter", 10},
-        {"gray matter", 10}
+        {"matter", 10}
     },
     {    // alpha coefficients (name -> value)
-        {"gray matter", 1},
-        {"white matter", 1}
+        {"matter", 1}
     },
     0.5, 0.0, 0.1, // x0, y0, z0 (initial condition center coords)
     0.3, // radius

@@ -3,7 +3,6 @@ project(exam LANGUAGES CXX C)
 
 include(cmake-common.cmake)
 
-#Only thing to be changed across different files
 add_executable(main src/main.cpp src/FisherKolmogorov.cpp)
 
 deal_ii_setup_target(main)

@@ -40,6 +40,10 @@ def main(csv_path: str = "speedup_results.csv", out_png: str = "speedup_plot.png
 
     # Pivot to have one curve per label
     pivot = agg.pivot(index="mesh", columns="label", values="elapsed_mean")
+    
+    # Sort by increasing time (using sequential)
+    if "sequential (1)" in pivot.columns:
+        pivot = pivot.sort_values("sequential (1)")
 
     # Plot
     plt.figure(figsize=(10, 5))

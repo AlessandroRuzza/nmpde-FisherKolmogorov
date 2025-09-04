@@ -99,17 +99,17 @@ MeshData<3> Cube40{
         {10, "matter"}
     },
     {    // isotropic diffusion (name -> value)
-        {"matter", 1}
+        {"matter", 0.003}
     },
     {    // axonal diffusion (name -> value)
-        {"matter", 10}
+        {"matter", 0.01}
     },
     {    // alpha coefficients (name -> value)
-        {"matter", 1}
+        {"matter", 5}
     },
     0.5, 0.0, 0.1, // x0, y0, z0 (initial condition center coords)
-    0.3, // radius
-    0.1,  // center_threshold
+    0.05, // radius
+    0.05,  // center_threshold
     {0.5, 0.5, 0.5}, // axonal_center
     0.25, // a (X axis)
     0.25, // b (Y axis)

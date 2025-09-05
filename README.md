@@ -36,17 +36,18 @@ To perform speedup analysis and benchmarking:
 ```bash
 $ # Run the analysis script
 $ cd speedup-analysis
-$ bash run_speedup.sh [mesh_preset] [output_csv]
+$ bash run_speedup.sh [output_csv]
 
 $ # Example
-$ bash run_speedup.sh Sagittal speedup_results.csv
+$ bash run_speedup.sh speedup_results.csv
 
-$ # Example with env variable
-$ REPEAT=3 THREADS="8 16" bash run_speedup.sh Sagittal speedup_results.csv
+$ # Example with env variables
+$ REPEAT=3 THREADS="8 16" MESH_PRESETS="Sagittal MNI" bash run_speedup.sh speedup_results.csv
 ```
 This will run both sequential and MPI parallel versions with 2, 4, 8, 12, and 16 processes.
 
 Optional environment variables (default values shown here):
+- `MESH_PRESETS="Sagittal MNI"` - specify which mesh presets to test
 - `THREADS="2 4 8 16"` - specify which process counts to test
 - `REPEAT=1` - number of repetitions per configuration
 

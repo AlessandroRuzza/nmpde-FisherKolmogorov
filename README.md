@@ -2,6 +2,7 @@
 
 This project implements a numerical solver for the Fisher-Kolmogorov equation using the deal.II finite element library. The solver supports both sequential and parallel (MPI) execution. The `speedup-analysis` folder contains performance analysis tools.
 
+See [our report](PDE_report.pdf) for a greater detailed description of our work.
 
 ## Download the meshes
 Mesh files should be placed in the `mesh/` folder. Download our meshes from [here](https://drive.google.com/drive/folders/1VbYBIZoS3r0KPoPtelDaFatVYBiAmmC3?usp=sharing)

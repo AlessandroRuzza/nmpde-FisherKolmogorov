@@ -1,9 +1,10 @@
-## Organizing the source code
-Please place all your sources into the `src` folder.
+# Numerical Methods for PDEs: Fisher-Kolmogorov Equation
 
-Binary files must not be uploaded to the repository (including executables).
+This project implements a numerical solver for the Fisher-Kolmogorov equation using the deal.II finite element library. The solver supports both sequential and parallel (MPI) execution. The `speedup-analysis` folder contains performance analysis tools.
 
-Mesh files should not be uploaded to the repository. If applicable, upload `gmsh` scripts with suitable instructions to generate the meshes (and ideally a Makefile that runs those instructions). If not applicable, consider uploading the meshes to a different file sharing service, and providing a download link as part of the building and running instructions.
+
+## Download the meshes
+Mesh files should be placed in the `mesh/` folder. Download our meshes from [here](https://drive.google.com/drive/folders/1VbYBIZoS3r0KPoPtelDaFatVYBiAmmC3?usp=sharing)
 
 ## Compiling
 To build the executable, make sure you have loaded the needed modules with
@@ -28,9 +29,6 @@ Passing an unknown preset will print the list of valid meshes. \
 Try `./main help` to see. 
 
 The output .vtu and .pvtu files will be in `build/output`
-
-### Download the meshes
-Mesh files should be placed in the `mesh/` folder. Download our meshes from [here]()
 
 ## Speedup analysis
 To perform speedup analysis and benchmarking:

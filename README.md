@@ -1,4 +1,4 @@
-# Numerical Methods for PDEs: Fisher-Kolmogorov Equation
+# Numerical Methods for PDEs: Fisher-Kolmogorov Equation for neurodegenerative diseases
 
 This project implements a numerical solver for the Fisher-Kolmogorov equation using the deal.II finite element library. The solver supports both sequential and parallel (MPI) execution. The `speedup-analysis` folder contains performance analysis tools.
 
